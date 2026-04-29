@@ -18,6 +18,7 @@ import {
   Users
 } from 'lucide-react';
 import SearchableDropdown from '../../components/SearchableDropdown';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
 import { toast } from 'react-toastify';
 
 const AddUser = () => {
@@ -165,29 +166,22 @@ const AddUser = () => {
   return (
     <div className="max-w-5xl mx-auto pb-8">
       {/* Compact Header */}
-      <div className="flex items-center justify-between mb-6 px-1">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-50 text-brand-active rounded-2xl flex items-center justify-center shadow-inner">
-            <Users size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {isEditMode ? 'Update User Account' : 'Register New User'}
-            </h1>
-            <p className="text-sm text-slate-500 font-medium tracking-tight">Configure profile, roles and access levels.</p>
-          </div>
-        </div>
-        <button
-          onClick={() => navigate('/dashboard/user-logs/users-list')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-[0.98]"
-        >
-          <ArrowLeft size={18} />
-          Back to list
-        </button>
-      </div>
+      <SectionHeader 
+        title={isEditMode ? 'Update User Account' : 'Register New User'}
+        subtitle="Configure profile, roles and access levels."
+        button={
+          <button
+            onClick={() => navigate('/dashboard/user-logs/users-list')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-all active:scale-[0.98]"
+          >
+            <ArrowLeft size={18} />
+            Back to list
+          </button>
+        }
+      />
 
-      <div className="bg-white rounded-[2rem] border-0 p-1">
-        <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6 bg-slate-50/30 rounded-3xl border border-slate-100">
+      <div className="bg-white rounded-lg border-0 p-1">
+        <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6 bg-slate-50/30 rounded-lg border border-slate-100">
           {/* Main Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
             {/* Full Name */}
@@ -293,7 +287,7 @@ const AddUser = () => {
           {formData.role === 'TEACHER' && (
             <div className="mt-4 pt-6 border-t border-slate-200/50 duration-400">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-indigo-50 text-brand-active rounded-xl">
+                <div className="p-2 bg-indigo-50 text-brand-active rounded-lg">
                   <BookOpen size={20} />
                 </div>
                 <div>
@@ -327,7 +321,7 @@ const AddUser = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-10 py-3 bg-brand-dark text-white rounded-xl font-bold shadow-lg shadow-brand-dark/20 hover:bg-brand-hover active:scale-[0.98] transition-all disabled:opacity-70"
+              className="flex items-center gap-2 px-10 py-3 bg-brand-dark text-white rounded-lg font-bold shadow-lg shadow-brand-dark/20 hover:bg-brand-hover active:scale-[0.98] transition-all disabled:opacity-70"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               {isEditMode ? "Save Changes" : "Create User Account"}

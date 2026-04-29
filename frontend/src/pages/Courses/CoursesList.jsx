@@ -48,7 +48,7 @@ const CoursesList = ({ onEdit }) => {
     { 
       key: 'code', 
       label: 'Course Code',
-      render: (val) => <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold tracking-wider">{val}</span>
+      render: (val) => <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold tracking-wider">{val}</span>
     },
     { 
       key: 'updatedAt', 
@@ -81,15 +81,15 @@ const CoursesList = ({ onEdit }) => {
 
   return (
     <div className="">
-      <div className="bg-white rounded-3xl border-0 p-1 overflow-hidden">
+      <div className="bg-white rounded-lg border-0 p-1 overflow-hidden">
         {loading ? (
           <div className="py-20 text-center flex flex-col items-center gap-3">
             <Icons.RefreshCcw className="animate-spin text-brand-active" size={32} />
             <p className="text-slate-500 font-medium tracking-tight">Fetching courses...</p>
           </div>
         ) : courses.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center gap-3 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200 m-4">
-             <div className="p-4 bg-white rounded-full shadow-sm mb-2">
+          <div className="py-20 text-center flex flex-col items-center gap-3 bg-slate-50/50 rounded-lg border border-dashed border-slate-200 m-4">
+             <div className="p-4 bg-white rounded-lg shadow-sm mb-2">
               <Icons.BookOpen size={32} className="text-slate-300" />
             </div>
             <p className="text-slate-500 font-medium">No courses found matching your criteria.</p>

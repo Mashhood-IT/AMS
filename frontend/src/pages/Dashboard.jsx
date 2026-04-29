@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, BookOpen, CheckCircle, Clock, FileText } from 'lucide-react';
+import SectionHeader from '../components/constantComponents/SectionHeader';
 
 const Dashboard = () => {
   const stats = [
@@ -11,12 +12,10 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Overview</h1>
-        <p className="text-slate-500 mt-2 text-lg">
-          Welcome back, Admin. Here's a snapshot of the system today.
-        </p>
-      </div>
+      <SectionHeader 
+        title="System Overview"
+        subtitle="Welcome back, Admin. Here's a snapshot of the system today."
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map((stat, index) => (

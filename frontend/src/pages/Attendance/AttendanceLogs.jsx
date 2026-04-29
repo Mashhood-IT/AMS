@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { Search, Calendar, Filter, RefreshCcw, User, BookOpen, Clock, CheckCircle, XCircle } from 'lucide-react';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
 
 const statusMap = {
   PRESENT: { label: 'Present', color: 'text-emerald-600 bg-emerald-50 border-emerald-100', icon: <CheckCircle size={14} /> },
-  ABSENT:  { label: 'Absent',  color: 'text-red-600 bg-red-50 border-red-100', icon: <XCircle size={14} /> },
-  LATE:    { label: 'Late',    color: 'text-amber-600 bg-amber-50 border-amber-100', icon: <Clock size={14} /> },
+  ABSENT: { label: 'Absent', color: 'text-red-600 bg-red-50 border-red-100', icon: <XCircle size={14} /> },
+  LATE: { label: 'Late', color: 'text-amber-600 bg-amber-50 border-amber-100', icon: <Clock size={14} /> },
 };
 
 const AttendanceLogs = () => {
@@ -67,14 +68,18 @@ const AttendanceLogs = () => {
   // Re-fetch when filters are reset manually
   useEffect(() => {
     if (Object.values(filters).every(v => v === '')) {
-        fetchLogs();
+      fetchLogs();
     }
   }, [filters]);
 
   return (
     <div className="space-y-6">
+      <SectionHeader 
+        title="Attendance History"
+        subtitle="Review and search historical attendance records."
+      />
       {/* Filters Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Course</label>
@@ -82,7 +87,7 @@ const AttendanceLogs = () => {
               name="courseId"
               value={filters.courseId}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             >
               <option value="">All Courses</option>
               {courses.map(c => (
@@ -97,7 +102,7 @@ const AttendanceLogs = () => {
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             >
               <option value="">All Statuses</option>
               <option value="PRESENT">Present</option>
@@ -113,7 +118,7 @@ const AttendanceLogs = () => {
               name="startDate"
               value={filters.startDate}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             />
           </div>
 
@@ -124,20 +129,20 @@ const AttendanceLogs = () => {
               name="endDate"
               value={filters.endDate}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             />
           </div>
 
           <div className="flex items-end gap-2">
             <button
               onClick={applyFilters}
-              className="flex-1 bg-brand-dark text-white text-sm font-semibold py-2 rounded-xl hover:bg-brand-hover transition-all"
+              className="flex-1 bg-brand-dark text-white text-sm font-semibold py-2 rounded-lg hover:bg-brand-hover transition-all"
             >
               Apply
             </button>
             <button
               onClick={resetFilters}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
               title="Reset Filters"
             >
               <RefreshCcw size={18} />
@@ -147,7 +152,7 @@ const AttendanceLogs = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
         {loading ? (
           <div className="py-20 flex flex-col items-center gap-3 text-slate-400">
             <RefreshCcw size={32} className="animate-spin text-brand-dark" />
@@ -181,7 +186,7 @@ const AttendanceLogs = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-brand-dark/5 flex items-center justify-center text-brand-dark font-bold text-xs">
+                        <div className="w-8 h-8 rounded-lg bg-brand-dark/5 flex items-center justify-center text-brand-dark font-bold text-xs">
                           {log.student?.name?.[0]}
                         </div>
                         <div>
@@ -197,7 +202,7 @@ const AttendanceLogs = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusMap[log.status]?.color}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${statusMap[log.status]?.color}`}>
                         {statusMap[log.status]?.icon}
                         {statusMap[log.status]?.label}
                       </span>

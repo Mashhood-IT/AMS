@@ -30,7 +30,7 @@ const Navbar = ({ toggleSidebar }) => {
             <p className="text-xs text-white/60 mt-1">Please log in</p>
           </div>
         )}
-        <div className="w-10 h-10 rounded-full bg-brand-active flex items-center justify-center border-2 border-white/20 shadow-inner">
+        <div className="w-10 h-10 rounded-lg bg-brand-active flex items-center justify-center border-2 border-white/20 shadow-inner">
           <User size={20} className="text-white" />
         </div>
       </div>

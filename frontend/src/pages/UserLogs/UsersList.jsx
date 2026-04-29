@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import CustomHeader from '../../components/constantComponents/CustomHeader';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
 import CustomTable from '../../components/constantComponents/CustomTable';
 import Icons from '../../assets/icons';
 
@@ -48,15 +48,14 @@ const UsersList = () => {
   const tableHeaders = [
     { key: 'name', label: 'Full Name' },
     { key: 'email', label: 'Email' },
-    { 
-      key: 'role', 
+    {
+      key: 'role',
       label: 'Role',
       render: (val) => (
-        <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase ${
-          val === 'ADMIN' ? 'bg-indigo-50 text-indigo-600' :
-          val === 'TEACHER' ? 'bg-amber-50 text-amber-600' :
-          'bg-emerald-50 text-emerald-600'
-        }`}>
+        <span className={`px-3 py-1 rounded-lg text-[10px] font-bold tracking-widest uppercase ${val === 'ADMIN' ? 'bg-indigo-50 text-indigo-600' :
+            val === 'TEACHER' ? 'bg-amber-50 text-amber-600' :
+              'bg-emerald-50 text-emerald-600'
+          }`}>
           {val}
         </span>
       )
@@ -92,13 +91,13 @@ const UsersList = () => {
 
   return (
     <div className="">
-      <CustomHeader
+      <SectionHeader 
         title="Users Management"
         subtitle="Manage system users, access levels, and role assignments."
-        actions={
+        button={
           <button
             onClick={() => navigate('/dashboard/user-logs/add-user')}
-            className="flex items-center gap-2 bg-brand-active text-white px-5 py-2.5 rounded-xl hover:bg-brand-hover transition-all shadow-lg shadow-brand-active/20 font-bold active:scale-[0.98]"
+            className="flex items-center gap-2 bg-brand-active text-white px-5 py-2.5 rounded-lg hover:bg-brand-hover transition-all shadow-lg shadow-brand-active/20 font-bold active:scale-[0.98]"
           >
             <Icons.Plus size={18} />
             <span>Add User</span>
@@ -106,15 +105,15 @@ const UsersList = () => {
         }
       />
 
-      <div className="bg-white rounded-3xl border-0 p-1 mt-6 overflow-hidden">
+      <div className="bg-white rounded-lg border-0 p-1 mt-6 overflow-hidden">
         {loading ? (
           <div className="py-20 text-center flex flex-col items-center gap-3">
             <Icons.RefreshCcw className="animate-spin text-brand-active" size={32} />
             <p className="text-slate-500 font-medium tracking-tight">Fetching users...</p>
           </div>
         ) : users.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center gap-3 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-             <div className="p-4 bg-white rounded-full shadow-sm mb-2">
+          <div className="py-20 text-center flex flex-col items-center gap-3 bg-slate-50/50 rounded-lg border border-dashed border-slate-200">
+            <div className="p-4 bg-white rounded-lg shadow-sm mb-2">
               <Icons.Users size={32} className="text-slate-300" />
             </div>
             <p className="text-slate-500 font-medium">No users found in the system.</p>

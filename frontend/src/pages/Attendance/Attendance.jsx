@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { ClipboardCheck, List, BarChart2 } from 'lucide-react';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
 
 const tabs = [
   { label: 'Mark Attendance', path: '/dashboard/attendance/mark', icon: <ClipboardCheck size={16} /> },
@@ -12,10 +13,10 @@ const Attendance = () => {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Attendance</h1>
-        <p className="text-slate-400 text-sm mt-1">Mark, view, and analyse student attendance across all courses.</p>
-      </div>
+      <SectionHeader 
+        title="Attendance Management"
+        subtitle="Mark, view, and analyse student attendance across all courses."
+      />
 
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-slate-200">

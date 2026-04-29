@@ -47,7 +47,7 @@ const ResetPassword = () => {
     return (
       <div className="space-y-5 text-center">
         <div className="flex justify-center">
-          <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center">
+          <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center">
             <CheckCircle size={28} className="text-slate-700" />
           </div>
         </div>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, X, Check } from 'lucide-react';
 
-const SearchableDropdown = ({ 
-  options = [], 
-  value = [], 
-  onChange, 
-  placeholder = "Select options...", 
-  label = "", 
+const SearchableDropdown = ({
+  options = [],
+  value = [],
+  onChange,
+  placeholder = "Select options...",
+  label = "",
   isMulti = false,
   error = ""
 }) => {
@@ -24,13 +24,13 @@ const SearchableDropdown = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredOptions = options.filter(option => 
+  const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = (option) => {
     if (isMulti) {
-      const newValue = Array.isArray(value) 
+      const newValue = Array.isArray(value)
         ? (value.includes(option.value)
           ? value.filter(v => v !== option.value)
           : [...value, option.value])
@@ -49,10 +49,10 @@ const SearchableDropdown = ({
   return (
     <div className="relative" ref={dropdownRef}>
       {label && <label className="block text-sm font-semibold text-slate-700 mb-1.5">{label}</label>}
-      
-      <div 
+
+      <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`min-h-[34px] px-3 py-0.5 bg-white border rounded-xl shadow-sm cursor-pointer transition-all flex items-center justify-between gap-2
+        className={`min-h-[34px] px-3 py-0.5 bg-white border rounded-lg shadow-sm cursor-pointer transition-all flex items-center justify-between gap-2
           ${isOpen ? "border-brand-active ring-4 ring-brand-active/10" : "border-slate-200 hover:border-slate-300"}
           ${error ? "border-red-300 ring-red-100" : ""}
         `}
@@ -63,9 +63,9 @@ const SearchableDropdown = ({
               options.filter(opt => value.includes(opt.value)).map(opt => (
                 <span key={opt.value} className="bg-brand-active/10 text-brand-active text-xs font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 group animate-in fade-in zoom-in duration-200">
                   {label}
-                  <X 
-                    size={12} 
-                    className="hover:text-brand-hover cursor-pointer" 
+                  <X
+                    size={12}
+                    className="hover:text-brand-hover cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       const val = options.find(o => o.label === label).value;
@@ -85,7 +85,7 @@ const SearchableDropdown = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-xl shadow-slate-200/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-2 border-b border-slate-50 flex items-center gap-2 bg-slate-50/50">
             <Search size={16} className="text-slate-400 ml-2" />
             <input
@@ -98,7 +98,7 @@ const SearchableDropdown = ({
               onClick={(e) => e.stopPropagation()}
             />
           </div>
-          
+
           <div className="max-h-60 overflow-y-auto p-1 custom-scrollbar">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option) => {
@@ -107,7 +107,7 @@ const SearchableDropdown = ({
                   <div
                     key={option.value}
                     onClick={() => handleSelect(option)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors mb-0.5 last:mb-0
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors mb-0.5 last:mb-0
                       ${isSelected ? "bg-brand-active/5 text-brand-active font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}
                     `}
                   >

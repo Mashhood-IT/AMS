@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { BarChart, PieChart, TrendingUp, Users, BookOpen, RefreshCcw, Download, Calendar } from 'lucide-react';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
 
 const AttendanceSummary = () => {
   const [summary, setSummary] = useState([]);
@@ -56,8 +57,12 @@ const AttendanceSummary = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeader 
+        title="Attendance Analytics"
+        subtitle="Visual summary and performance metrics for student attendance."
+      />
       {/* Filters Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Filter by Course</label>
@@ -65,7 +70,7 @@ const AttendanceSummary = () => {
               name="courseId"
               value={filters.courseId}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             >
               <option value="">All Courses</option>
               {courses.map(c => (
@@ -81,7 +86,7 @@ const AttendanceSummary = () => {
               name="startDate"
               value={filters.startDate}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             />
           </div>
 
@@ -92,13 +97,13 @@ const AttendanceSummary = () => {
               name="endDate"
               value={filters.endDate}
               onChange={handleFilterChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/10 focus:border-brand-dark/30 transition-all"
             />
           </div>
 
           <button
             onClick={applyFilters}
-            className="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-semibold hover:bg-brand-hover active:scale-[0.98] transition-all shadow-sm"
+            className="bg-brand-dark text-white px-8 py-2.5 rounded-lg font-semibold hover:bg-brand-hover active:scale-[0.98] transition-all shadow-sm"
           >
             Generate Analysis
           </button>
@@ -112,17 +117,17 @@ const AttendanceSummary = () => {
           <p className="text-sm font-medium">Crunching attendance data...</p>
         </div>
       ) : summary.length === 0 ? (
-        <div className="py-20 flex flex-col items-center gap-3 text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+        <div className="py-20 flex flex-col items-center gap-3 text-slate-400 border border-dashed border-slate-200 rounded-lg bg-slate-50">
           <BarChart size={32} strokeWidth={1.5} />
           <p className="text-sm font-medium">No attendance data to summarize for this criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {summary.map((item, index) => (
-            <div key={index} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group">
+            <div key={index} className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand-dark/5 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-white transition-all">
+                  <div className="w-10 h-10 rounded-lg bg-brand-dark/5 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-white transition-all">
                     <Users size={20} />
                   </div>
                   <div>
@@ -130,21 +135,20 @@ const AttendanceSummary = () => {
                     <p className="text-slate-400 text-xs">{item.student?.email}</p>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-bold border ${getPercentageColor(item.attendancePercentage)}`}>
+                <div className={`px-3 py-1 rounded-lg text-sm font-bold border ${getPercentageColor(item.attendancePercentage)}`}>
                   {item.attendancePercentage}%
                 </div>
               </div>
 
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-1.5">
-                    <BookOpen size={14} className="text-slate-400" />
-                    <span className="text-sm font-semibold text-slate-700">{item.course?.name} ({item.course?.code})</span>
+                  <BookOpen size={14} className="text-slate-400" />
+                  <span className="text-sm font-semibold text-slate-700">{item.course?.name} ({item.course?.code})</span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-1000 ${
-                        item.attendancePercentage >= 75 ? 'bg-emerald-500' : item.attendancePercentage >= 60 ? 'bg-amber-500' : 'bg-red-500'
-                    }`}
+                <div className="w-full h-2 bg-slate-100 rounded-lg overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-1000 ${item.attendancePercentage >= 75 ? 'bg-emerald-500' : item.attendancePercentage >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                      }`}
                     style={{ width: `${item.attendancePercentage}%` }}
                   />
                 </div>

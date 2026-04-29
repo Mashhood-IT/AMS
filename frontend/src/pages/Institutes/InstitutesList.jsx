@@ -1,158 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   Building2, 
-  Search, 
-  Filter, 
   Plus, 
-  MoreVertical, 
-  MapPin, 
-  Phone, 
-  User,
-  ExternalLink,
   Edit,
-  Trash2
+  Trash2,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
+import CustomTable from '../../components/constantComponents/CustomTable';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
+import { toast } from 'react-toastify';
 
 const InstitutesList = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [institutes, setInstitutes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Static data as requested
-  const [institutes] = useState([
-    {
-      id: 1,
-      name: 'Oakridge International School',
-      classesOffered: '1 to 12',
-      phone: '+44 20 1234 5678',
-      address: '1st Floor, 29 Minerva Road, London, England, NW10 6HJ',
-      principal: 'Dr. Sarah Wilson'
+  useEffect(() => {
+    fetchInstitutes();
+  }, []);
+
+  const fetchInstitutes = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('http://localhost:5000/api/institutes', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.data.success) {
+        const flattened = response.data.institutes.map(inst => ({
+          ...inst,
+          principalName: inst.principal?.name || 'N/A'
+        }));
+        setInstitutes(flattened);
+      }
+    } catch (err) {
+      toast.error('Failed to fetch institutes');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this institute?')) return;
+    
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/institutes/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.data.success) {
+        toast.success('Institute deleted successfully');
+        fetchInstitutes();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete institute');
+    }
+  };
+
+  const tableHeaders = [
+    { 
+      key: 'name', 
+      label: 'Institute Name',
+      render: (val, row) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold">
+            {val.charAt(0)}
+          </div>
+          <span className="font-semibold text-slate-900">{val}</span>
+        </div>
+      )
+    },
+    { key: 'classesOffered', label: 'Classes' },
+    { 
+      key: 'principalName', 
+      label: 'Principal'
+    },
+    { key: 'phone', label: 'Contact' },
+    { 
+      key: 'address', 
+      label: 'Address',
+      render: (val) => (
+        <span className="text-xs text-slate-500 max-w-xs truncate block" title={val}>
+          {val}
+        </span>
+      )
     },
     {
-      id: 2,
-      name: 'St. Mary’s Academy',
-      classesOffered: 'Kindergarten to 10',
-      phone: '+44 20 8765 4321',
-      address: '45 High Street, Manchester, England',
-      principal: 'Mr. James Brown'
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate(`/dashboard/institutes/edit/${row.id}`)}
+            className="p-2 text-slate-400 hover:text-brand-active hover:bg-brand-active/5 rounded-lg transition-all"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button 
+            onClick={() => handleDelete(row.id)}
+            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+          <button 
+            className="p-2 text-slate-400 hover:text-brand-active hover:bg-brand-active/5 rounded-lg transition-all"
+            title="View Profile"
+          >
+            <ExternalLink size={16} />
+          </button>
+        </div>
+      )
     }
-  ]);
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-brand-active/10 text-brand-active rounded-2xl flex items-center justify-center shrink-0">
-            <Building2 size={28} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Institutes Directory</h1>
-            <p className="text-slate-500 font-medium text-sm">Manage all registered institutes and their principals.</p>
-          </div>
-        </div>
-        <button
-          onClick={() => navigate('/dashboard/institutes/add')}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-dark text-white rounded-xl font-bold shadow-lg shadow-brand-dark/20 hover:bg-brand-hover active:scale-[0.98] transition-all"
-        >
-          <Plus size={20} />
-          Add Institute
-        </button>
-      </div>
-
-      {/* Filters Bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search by name, principal, or location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-brand-active/20 outline-none text-slate-700 transition-all"
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-all w-full md:w-auto justify-center">
-            <Filter size={18} />
-            Filters
+      <SectionHeader 
+        title="Institutes Directory"
+        subtitle="Manage all registered institutes and their principals."
+        button={
+          <button
+            onClick={() => navigate('/dashboard/institutes/add')}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-dark text-white rounded-lg font-bold shadow-lg shadow-brand-dark/20 hover:bg-brand-hover active:scale-[0.98] transition-all"
+          >
+            <Plus size={20} />
+            Add Institute
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Institutes Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {institutes.map((inst) => (
-          <div key={inst.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden group">
-            <div className="p-6 md:p-8">
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xl">
-                    {inst.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-brand-active transition-colors">{inst.name}</h3>
-                    <div className="flex items-center gap-2 text-slate-500 mt-1">
-                      <span className="bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
-                        Classes: {inst.classesOffered}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
-                  <MoreVertical size={20} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <User size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Principal</p>
-                    <p className="text-sm font-semibold text-slate-700">{inst.principal}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                    <Phone size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Contact</p>
-                    <p className="text-sm font-semibold text-slate-700">{inst.phone}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 md:col-span-2">
-                  <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
-                    <MapPin size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Address</p>
-                    <p className="text-sm font-semibold text-slate-700 leading-tight">{inst.address}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button className="flex items-center gap-2 text-slate-500 hover:text-brand-active font-bold text-xs transition-colors px-3 py-2 hover:bg-brand-active/5 rounded-lg">
-                    <Edit size={14} />
-                    Edit
-                  </button>
-                  <button className="flex items-center gap-2 text-slate-500 hover:text-red-500 font-bold text-xs transition-colors px-3 py-2 hover:bg-red-50 rounded-lg">
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
-                </div>
-                <button className="flex items-center gap-2 text-brand-active font-bold text-sm hover:underline">
-                  View Profile
-                  <ExternalLink size={16} />
-                </button>
-              </div>
-            </div>
+      {/* Table Section */}
+      <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-4">
+            <Loader2 size={48} className="animate-spin text-brand-active/40" />
+            <p className="font-bold text-lg animate-pulse">Loading institutes...</p>
           </div>
-        ))}
+        ) : (
+          <CustomTable 
+            tableHeaders={tableHeaders}
+            tableData={institutes}
+            showSearch={true}
+            showDownload={true}
+            showPagination={true}
+          />
+        )}
       </div>
     </div>
   );

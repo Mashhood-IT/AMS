@@ -173,7 +173,7 @@ const CustomTable = ({
       {/* Table */}
       <div
         ref={tableRef}
-        className="w-full overflow-x-auto rounded-xl border border-slate-200"
+        className="w-full overflow-x-auto rounded-lg border border-slate-200"
       >
         <table className="w-full min-w-[700px] text-sm text-left">
           <thead>
@@ -202,8 +202,8 @@ const CustomTable = ({
                       showSorting && col.key && requestSort(col.key)
                     }
                     className={`px-4 py-4 font-semibold whitespace-nowrap ${showSorting && col.key
-                        ? "cursor-pointer hover:bg-slate-100 transition-colors"
-                        : ""
+                      ? "cursor-pointer hover:bg-slate-100 transition-colors"
+                      : ""
                       }`}
                   >
                     <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ const CustomTable = ({
         {showPagination && (
           <div className="flex items-center gap-3 bg-white p-1 rounded-lg border border-slate-200">
             <button
-              className="p-1.5 rounded-md hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
             >
@@ -296,7 +296,7 @@ const CustomTable = ({
             </div>
 
             <button
-              className="p-1.5 rounded-md hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               disabled={page === totalPages || totalPages === 0}
               onClick={() => setPage(page + 1)}
             >

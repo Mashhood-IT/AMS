@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   ArrowLeft,
@@ -12,10 +12,13 @@ import {
   UserCircle
 } from 'lucide-react';
 import SearchableDropdown from '../../components/SearchableDropdown';
+import SectionHeader from '../../components/constantComponents/SectionHeader';
 import { toast } from 'react-toastify';
 
 const AddInstitute = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const [loading, setLoading] = useState(false);
   const [fetchingPrincipals, setFetchingPrincipals] = useState(true);
   const [principals, setPrincipals] = useState([]);
@@ -30,7 +33,10 @@ const AddInstitute = () => {
 
   useEffect(() => {
     fetchPrincipals();
-  }, []);
+    if (isEditMode) {
+      fetchInstituteDetails();
+    }
+  }, [id]);
 
   const fetchPrincipals = async () => {
     try {
@@ -47,6 +53,26 @@ const AddInstitute = () => {
       toast.error('Failed to fetch principals');
     } finally {
       setFetchingPrincipals(false);
+    }
+  };
+
+  const fetchInstituteDetails = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/institutes/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.data.success) {
+        const inst = response.data.institute;
+        setFormData({
+          name: inst.name,
+          classesOffered: inst.classesOffered,
+          phone: inst.phone || '',
+          address: inst.address || '',
+          principalId: inst.principalId || ''
+        });
+      }
+    } catch (err) {
+      toast.error('Failed to fetch institute details');
     }
   };
 
@@ -71,16 +97,22 @@ const AddInstitute = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/institutes', formData, {
+      const url = isEditMode
+        ? `http://localhost:5000/api/institutes/${id}`
+        : 'http://localhost:5000/api/institutes';
+
+      const method = isEditMode ? 'put' : 'post';
+
+      const response = await axios[method](url, formData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
       if (response.data.success) {
-        toast.success('Institute created successfully');
-        navigate('/dashboard');
+        toast.success(`Institute ${isEditMode ? 'updated' : 'created'} successfully`);
+        navigate('/dashboard/institutes');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create institute');
+      toast.error(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} institute`);
     } finally {
       setLoading(false);
     }
@@ -89,34 +121,26 @@ const AddInstitute = () => {
   return (
     <div className="max-w-6xl mx-auto pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 px-1">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-50 text-brand-active rounded-xl flex items-center justify-center shadow-inner">
-            <Building2 size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Setup New Institute</h1>
-            <p className="text-sm text-slate-500 font-medium tracking-tight">Register a main branch and assign a Principal.</p>
-          </div>
-        </div>
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-[0.98]"
-        >
-          <ArrowLeft size={18} />
-          Go Back
-        </button>
-      </div>
+      <SectionHeader
+        title={isEditMode ? 'Edit Institute' : 'Setup New Institute'}
+        subtitle={isEditMode ? 'Update institute information and principal.' : 'Register a main branch and assign a Principal.'}
+        button={
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-all active:scale-[0.98]"
+          >
+            <ArrowLeft size={18} />
+            Go Back
+          </button>
+        }
+      />
 
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-        <form onSubmit={handleSubmit} className="p-8 md:p-12">
-          
+      <div>
+        <form onSubmit={handleSubmit}>
           <div className="flex flex-col lg:flex-row gap-12">
-            
-            {/* Left Column: Logo Upload (Matching the design in the photo) */}
             <div className="w-full lg:w-1/4 flex flex-col items-center gap-4">
-              <div className="w-48 h-48 rounded-[2rem] border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center gap-3 relative group cursor-pointer transition-all hover:bg-sky-50">
-                <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
+              <div className="w-48 h-48 rounded-lg border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center gap-3 relative group cursor-pointer transition-all hover:bg-sky-50">
+                <div className="w-24 h-24 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400">
                   <UserCircle size={64} />
                 </div>
                 <button type="button" className="bg-sky-200 text-sky-800 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-sky-300 transition-colors flex items-center gap-2">
@@ -130,10 +154,10 @@ const AddInstitute = () => {
             {/* Right Column: Form Fields */}
             <div className="flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                
+
                 {/* Institute Name */}
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-bold text-slate-700 ml-1">
+                  <label className="block text-sm font-bold text-slate-700">
                     Institute Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -209,7 +233,7 @@ const AddInstitute = () => {
                       onChange={handleInputChange}
                       rows="4"
                       placeholder="e.g. 1st Floor, 29 Minerva Road, London, England, NW10 6HJ"
-                      className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none transition-all focus:border-brand-active focus:ring-4 focus:ring-brand-active/10 text-slate-700"
+                      className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 outline-none transition-all focus:border-brand-active focus:ring-4 focus:ring-brand-active/10 text-slate-700"
                     ></textarea>
                   </div>
                 </div>
@@ -220,10 +244,9 @@ const AddInstitute = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-3 px-12 py-4 bg-brand-active text-white rounded-xl font-bold shadow-xl shadow-brand-active/20 hover:bg-brand-hover active:scale-[0.98] transition-all disabled:opacity-70 text-lg"
+                  className="flex items-center gap-3 px-6 py-2 rounded-lg bg-brand-active text-white font-bold hover:bg-brand-hover active:scale-[0.98] transition-all disabled:opacity-70 text-lg"
                 >
-                  {loading ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
-                  Create Institute Account
+                  {isEditMode ? 'Update Institute Details' : 'Create Institute Account'}
                 </button>
               </div>
             </div>

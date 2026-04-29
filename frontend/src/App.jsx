@@ -68,6 +68,7 @@ function App() {
               <Route index element={<Navigate to="list" replace />} />
               <Route path="list" element={<InstitutesList />} />
               <Route path="add" element={<AddInstitute />} />
+              <Route path="edit/:id" element={<AddInstitute />} />
             </Route>
           </Route>
 

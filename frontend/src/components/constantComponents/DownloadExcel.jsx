@@ -39,7 +39,7 @@ const DownloadExcel = ({ tableData = [], tableHeaders = [], filename = "table-da
     return (
         <button
             onClick={handleDownload}
-            className="border py-2 px-3 rounded cursor-pointer border-[var(--light-gray)] bg-white hover:bg-gray-100 text-sm flex items-center gap-2"
+            className="border py-2 px-3 rounded-lg cursor-pointer border-[var(--light-gray)] bg-white hover:bg-gray-100 text-sm flex items-center gap-2"
         >
             <Icons.Download size={16} />
             Download Excel
