@@ -192,7 +192,14 @@ const AddUser = () => {
 
       if (response.data.success) {
         toast.success(isEditMode ? 'User updated successfully' : 'User created successfully');
-        navigate('/dashboard/user-logs/users-list');
+        
+        if (!isEditMode && formData.role === 'PRINCIPAL') {
+          // Redirect to institute creation with the new user's ID
+          const userId = response.data.user?.id;
+          navigate('/dashboard/institutes/add', { state: { principalId: userId } });
+        } else {
+          navigate('/dashboard/user-logs/users-list');
+        }
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed');
@@ -303,7 +310,8 @@ const AddUser = () => {
                   onChange={handleInputChange}
                   type="email"
                   placeholder="name@example.com"
-                  className={`custom_input ${errors.email ? 'border-red-400 focus:border-red-500 shadow-red-50' : ''}`}
+                  disabled={isEditMode && currentUser.role !== 'ADMIN'}
+                  className={`custom_input ${errors.email ? 'border-red-400 focus:border-red-500 shadow-red-50' : ''} ${isEditMode && currentUser.role !== 'ADMIN' ? 'bg-slate-50 cursor-not-allowed opacity-70' : ''}`}
                 />
               </div>
               {errors.email && <p className="text-xs text-red-500 font-bold pl-2">{errors.email}</p>}

@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LogOut,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react';
 import { navItems } from '../data/Data';
 
@@ -14,9 +15,13 @@ const Sidebar = ({ isSidebarOpen }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userPermissions = user.permissions || [];
 
-  const filteredNavItems = navItems.filter(item =>
-    user.role === 'ADMIN' || userPermissions.includes(item.permissionKey)
-  );
+  const filteredNavItems = navItems.filter(item => {
+    const excludedForAdmin = ['students', 'courses', 'attendance'];
+    if (user.role === 'ADMIN' && excludedForAdmin.includes(item.permissionKey)) {
+      return false;
+    }
+    return user.role === 'ADMIN' || userPermissions.includes(item.permissionKey);
+  });
 
   const toggleMenu = (title) => {
     setOpenMenus(prev => ({
@@ -98,6 +103,22 @@ const Sidebar = ({ isSidebarOpen }) => {
             </div>
           );
         })}
+
+        {/* Edit Profile Tab (End of List) */}
+        <Link
+          to="/dashboard/profile"
+          className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group
+            ${location.pathname === '/dashboard/profile'
+              ? 'bg-brand-active text-white shadow-lg shadow-black/20'
+              : 'text-white/70 hover:bg-brand-hover hover:text-white'
+            }`}
+        >
+          <div className="shrink-0"><User size={20} /></div>
+          <span className={`font-medium transition-all duration-300 whitespace-nowrap
+            ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 pointer-events-none'}`}>
+            Edit Profile
+          </span>
+        </Link>
       </nav>
 
       {/* Footer Section */}

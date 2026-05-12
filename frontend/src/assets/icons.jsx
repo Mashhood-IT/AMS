@@ -17,7 +17,8 @@ import {
   Search,
   Plus,
   Pencil,
-  Trash2
+  Trash2,
+  BookOpen
 } from 'lucide-react';
 
 const Icons = {
@@ -39,7 +40,8 @@ const Icons = {
   Search,
   Plus,
   Pencil,
-  Trash2
+  Trash2,
+  BookOpen
 };
 
 export default Icons;

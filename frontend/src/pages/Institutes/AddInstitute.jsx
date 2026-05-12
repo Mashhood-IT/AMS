@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 const AddInstitute = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
   const isEditMode = !!id;
   const [loading, setLoading] = useState(false);
   const [fetchingPrincipals, setFetchingPrincipals] = useState(true);
@@ -36,8 +37,10 @@ const AddInstitute = () => {
     fetchPrincipals();
     if (isEditMode) {
       fetchInstituteDetails();
+    } else if (location.state?.principalId) {
+      setFormData(prev => ({ ...prev, principalId: location.state.principalId }));
     }
-  }, [id]);
+  }, [id, location.state]);
 
   const fetchPrincipals = async () => {
     try {

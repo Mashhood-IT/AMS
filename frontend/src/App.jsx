@@ -9,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import UsersList from './pages/UserLogs/UsersList';
 import AddUser from './pages/UserLogs/AddUser';
+import EditProfile from './pages/UserLogs/EditProfile';
 import Courses from './pages/Courses/Courses';
 import CoursesList from './pages/Courses/CoursesList';
 import AddCourse from './pages/Courses/AddCourse';
@@ -51,6 +52,7 @@ function App() {
             <Route path="students" element={<StudentsList />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="profile" element={<EditProfile />} />
             <Route path="user-logs">
               <Route index element={<Navigate to="users-list" replace />} />
               <Route path="users-list" element={<UsersList />} />

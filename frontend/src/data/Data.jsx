@@ -13,6 +13,17 @@ import {
 export const navItems = [
   { title: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', permissionKey: 'dashboard' },
   {
+    title: 'User Logs',
+    icon: <History size={20} />,
+    path: '/dashboard/user-logs',
+    permissionKey: 'user-logs',
+    subTabs: [
+      { title: 'Users List', path: '/dashboard/user-logs/users-list' },
+      { title: 'Add User', path: '/dashboard/user-logs/add-user' },
+    ]
+  },
+
+  {
     title: 'Institutes',
     icon: <Building2 size={20} />,
     path: '/dashboard/institutes',
@@ -22,8 +33,6 @@ export const navItems = [
       { title: 'Add Institute', path: '/dashboard/institutes/add' },
     ]
   },
-  { title: 'Attendance', icon: <ClipboardCheck size={20} />, path: '/dashboard/attendance', permissionKey: 'attendance' },
-  { title: 'Students', icon: <Users size={20} />, path: '/dashboard/students', permissionKey: 'students' },
   {
     title: 'Courses',
     icon: <BookOpen size={20} />,
@@ -34,16 +43,10 @@ export const navItems = [
       { title: 'Add Course', path: '/dashboard/courses/add-course' },
     ]
   },
+  { title: 'Attendance', icon: <ClipboardCheck size={20} />, path: '/dashboard/attendance', permissionKey: 'attendance' },
+  { title: 'Students', icon: <Users size={20} />, path: '/dashboard/students', permissionKey: 'students' },
+
   { title: 'Reports', icon: <FileText size={20} />, path: '/dashboard/reports', permissionKey: 'reports' },
   { title: 'Settings', icon: <Settings size={20} />, path: '/dashboard/settings', permissionKey: 'settings' },
-  {
-    title: 'User Logs',
-    icon: <History size={20} />,
-    path: '/dashboard/user-logs',
-    permissionKey: 'user-logs',
-    subTabs: [
-      { title: 'Users List', path: '/dashboard/user-logs/users-list' },
-      { title: 'Add User', path: '/dashboard/user-logs/add-user' },
-    ]
-  },
+
 ];
