@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  Building2, 
-  Plus, 
+import {
+  Building2,
+  Plus,
   Edit,
   Trash2,
   ExternalLink,
@@ -45,7 +45,7 @@ const InstitutesList = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this institute?')) return;
-    
+
     try {
       const response = await axios.delete(`http://localhost:5000/api/institutes/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -60,8 +60,8 @@ const InstitutesList = () => {
   };
 
   const tableHeaders = [
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       label: 'Institute Name',
       render: (val, row) => (
         <div className="flex items-center gap-3">
@@ -73,13 +73,13 @@ const InstitutesList = () => {
       )
     },
     { key: 'maxClass', label: 'Max Class' },
-    { 
-      key: 'principalName', 
+    {
+      key: 'principalName',
       label: 'Principal'
     },
     { key: 'phone', label: 'Contact' },
-    { 
-      key: 'address', 
+    {
+      key: 'address',
       label: 'Address',
       render: (val) => (
         <span className="text-xs text-slate-500 max-w-xs truncate block" title={val}>
@@ -92,21 +92,21 @@ const InstitutesList = () => {
       label: 'Actions',
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => navigate(`/dashboard/institutes/edit/${row.id}`)}
             className="p-2 text-slate-400 hover:text-brand-active hover:bg-brand-active/5 rounded-lg transition-all"
             title="Edit"
           >
             <Edit size={16} />
           </button>
-          <button 
+          <button
             onClick={() => handleDelete(row.id)}
             className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
             title="Delete"
           >
             <Trash2 size={16} />
           </button>
-          <button 
+          <button
             className="p-2 text-slate-400 hover:text-brand-active hover:bg-brand-active/5 rounded-lg transition-all"
             title="View Profile"
           >
@@ -120,7 +120,7 @@ const InstitutesList = () => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <SectionHeader 
+      <SectionHeader
         title="Institutes Directory"
         subtitle="Manage all registered institutes and their principals."
         button={
@@ -139,10 +139,10 @@ const InstitutesList = () => {
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-4">
             <Loader2 size={48} className="animate-spin text-brand-active/40" />
-            <p className="font-bold text-lg animate-pulse">Loading institutes...</p>
+            <p className="font-bold text-lg">Loading institutes...</p>
           </div>
         ) : (
-          <CustomTable 
+          <CustomTable
             tableHeaders={tableHeaders}
             tableData={institutes}
             showSearch={true}

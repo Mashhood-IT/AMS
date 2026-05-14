@@ -142,19 +142,6 @@ const AddInstitute = () => {
       <div>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col lg:flex-row gap-12">
-            <div className="w-full lg:w-1/4 flex flex-col items-center gap-4">
-              <div className="w-48 h-48 rounded-lg b bg-sky-50/30 flex flex-col items-center justify-center gap-3 relative group cursor-pointer transition-all hover:bg-sky-50">
-                <div className="w-24 h-24 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400">
-                  <UserCircle size={64} />
-                </div>
-                <button type="button" className="bg-sky-200 text-sky-800 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-sky-300 transition-colors flex items-center gap-2">
-                  <Upload size={14} />
-                  Upload Institute Logo
-                </button>
-              </div>
-              <p className="text-xs text-slate-400 font-medium text-center px-4">Recommended size: 512x512px. JPG or PNG.</p>
-            </div>
-
             {/* Right Column: Form Fields */}
             <div className="flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
