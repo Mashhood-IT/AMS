@@ -5,6 +5,36 @@ import SectionHeader from '../../components/constantComponents/SectionHeader';
 
 const STATUS_OPTIONS = ['PRESENT', 'ABSENT', 'LATE'];
 
+const parseCourseTime = (time) => {
+  if (!time) return null;
+  const trimmed = time.trim();
+  const ampmMatch = trimmed.match(/\s?(am|pm)$/i);
+  let normalized = trimmed;
+
+  if (ampmMatch) {
+    const [timePart, period] = trimmed.split(' ');
+    const [hour, minute] = timePart.split(':').map(Number);
+    let hrs = hour;
+    if (period.toUpperCase() === 'PM' && hour !== 12) hrs += 12;
+    if (period.toUpperCase() === 'AM' && hour === 12) hrs = 0;
+    normalized = `${hrs.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  }
+
+  const [hours, minutes] = normalized.split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return { hours, minutes };
+};
+
+const isTimeUpForCourse = (course, selectedDate) => {
+  if (!course || !course.time) return false;
+  const time = parseCourseTime(course.time);
+  if (!time) return false;
+
+  const target = new Date(selectedDate);
+  target.setHours(time.hours, time.minutes, 0, 0);
+  return new Date() > target;
+};
+
 const statusStyle = {
   PRESENT: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   ABSENT: 'bg-red-50 text-red-600 border-red-200',
@@ -22,45 +52,82 @@ const MarkAttendance = () => {
   const [students, setStudents] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [records, setRecords] = useState([]);   // [{ studentId, name, email, status }]
+  const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null); // { type: 'success'|'error', message }
+  const [toast, setToast] = useState(null);
+  const [courseDetails, setCourseDetails] = useState(null);
 
-  // Load courses on mount
   useEffect(() => {
     api.getCourses()
       .then(d => setCourses(d.courses || []))
       .catch(() => { });
   }, []);
 
-  // Load students when course changes
   useEffect(() => {
-    if (!selectedCourse) {
-      setStudents([]);
-      setRecords([]);
-      return;
-    }
-    setLoading(true);
-    // Fetch only students enrolled in this course
-    api.getUsers({ role: 'STUDENT', courseId: selectedCourse })
-      .then(d => {
-        const list = d.users || [];
-        setStudents(list);
-        // Seed records with default PRESENT
-        setRecords(list.map(s => ({
-          studentId: s.id,
-          name: s.name,
-          email: s.email,
-          status: 'PRESENT'
-        })));
-      })
-      .catch((err) => {
-        console.error("Failed to load students:", err);
-        showToast('error', 'Failed to load students for this course.');
-      })
-      .finally(() => setLoading(false));
-  }, [selectedCourse]);
+    const loadStudentsAndAttendance = async () => {
+      if (!selectedCourse) {
+        setStudents([]);
+        setRecords([]);
+        setCourseDetails(null);
+        return;
+      }
+
+      setLoading(true);
+      console.log('Loading attendance data for course:', selectedCourse, 'date:', date);
+
+      try {
+        const [usersResponse, attendanceResponse] = await Promise.all([
+          api.getUsers({ role: 'STUDENT', courseId: selectedCourse }),
+          api.getAttendanceByCourse(selectedCourse, { date }),
+        ]);
+
+        const studentList = usersResponse.users || [];
+        const attendanceList = attendanceResponse.attendance || [];
+        const courseInfo = attendanceResponse.course || courses.find(c => String(c.id) === String(selectedCourse));
+
+        console.log('Loaded students:', studentList);
+        console.log('Loaded attendance records:', attendanceList);
+        console.log('Course info for attendance:', courseInfo);
+
+        const attendanceMap = new Map(attendanceList.map((record) => [record.studentId, record]));
+
+        const mergedRecords = studentList.length > 0
+          ? studentList.map((student) => {
+              const existing = attendanceMap.get(student.id);
+              const defaultStatus = existing ? existing.status : (isTimeUpForCourse(courseInfo, date) ? 'ABSENT' : 'PRESENT');
+
+              return {
+                studentId: student.id,
+                name: student.name,
+                email: student.email,
+                status: existing ? existing.status : defaultStatus,
+                autoAbsent: !existing && defaultStatus === 'ABSENT',
+              };
+            })
+          : attendanceList.map((record) => ({
+              studentId: record.studentId,
+              name: record.student?.name || 'Unknown Student',
+              email: record.student?.email || 'Unknown Email',
+              status: record.status,
+              autoAbsent: false,
+            }));
+
+        console.log('Merged attendance records:', mergedRecords);
+
+        setCourseDetails(courseInfo);
+        setStudents(studentList);
+        setRecords(mergedRecords);
+      } catch (err) {
+        console.error('Failed to load students or attendance:', err);
+        showToast('error', err.message || 'Failed to load students for this course.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStudentsAndAttendance();
+  }, [selectedCourse, date, courses]);
 
   const setStatus = (studentId, status) => {
     setRecords(prev => prev.map(r => r.studentId === studentId ? { ...r, status } : r));
@@ -78,14 +145,17 @@ const MarkAttendance = () => {
   const handleSave = async () => {
     if (!selectedCourse || records.length === 0) return;
     setSaving(true);
+    console.log('Saving attendance records:', records);
     try {
       const result = await api.bulkMarkAttendance({
         courseId: parseInt(selectedCourse),
         date,
-        records: records.map(r => ({ studentId: r.studentId, status: r.status })),
+        records: records.map((r) => ({ studentId: r.studentId, status: r.status })),
       });
+      console.log('Save response:', result);
       showToast('success', `${result.saved} record(s) saved successfully.`);
     } catch (err) {
+      console.error('Failed to save attendance:', err);
       showToast('error', err.message || 'Failed to save attendance.');
     } finally {
       setSaving(false);
@@ -95,10 +165,10 @@ const MarkAttendance = () => {
   const presentCount = records.filter(r => r.status === 'PRESENT').length;
   const absentCount = records.filter(r => r.status === 'ABSENT').length;
   const lateCount = records.filter(r => r.status === 'LATE').length;
-
+  console.log("records are", records)
   return (
     <div className="space-y-6">
-      <SectionHeader 
+      <SectionHeader
         title="Mark Attendance"
         subtitle="Record daily student attendance for academic courses."
       />
@@ -143,6 +213,11 @@ const MarkAttendance = () => {
           />
         </div>
       </div>
+      {courseDetails && isTimeUpForCourse(courseDetails, date) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          Class time for <strong>{courseDetails.name}</strong> has passed. Students without an existing record are being shown as <strong>Absent</strong>.
+        </div>
+      )}
 
       {/* Student Table */}
       {!selectedCourse ? (
@@ -163,7 +238,6 @@ const MarkAttendance = () => {
         </div>
       ) : (
         <>
-          {/* Stats + Bulk Actions */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex gap-3">
               <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">

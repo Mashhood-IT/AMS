@@ -123,6 +123,7 @@ export const getAllUsers = async (req, res) => {
     const { role, courseId, status, instituteId: filterInstituteId } = req.query;
 
     const requester = await prisma.user.findUnique({ where: { id: req.userId } });
+    console.log(`[getAllUsers] requester=${requester?.id} role=${requester?.role} roleFilter=${role} courseId=${courseId} status=${status} instituteId=${filterInstituteId}`);
 
     const where = {};
     if (role) where.role = role.toUpperCase();
@@ -133,12 +134,29 @@ export const getAllUsers = async (req, res) => {
     } else if (filterInstituteId) {
       where.instituteId = filterInstituteId;
     }
+
+    let courseClassName = null;
     if (courseId) {
-      where.enrollments = {
-        some: {
-          courseId: parseInt(courseId)
+      const course = await prisma.course.findUnique({
+        where: { id: parseInt(courseId) },
+        select: { className: true }
+      });
+      courseClassName = course?.className;
+      console.log(`[getAllUsers] courseId=${courseId} courseClassName=${courseClassName}`);
+
+      const enrollmentFilter = {
+        enrollments: {
+          some: {
+            courseId: parseInt(courseId)
+          }
         }
       };
+
+      if (courseClassName) {
+        where.OR = [enrollmentFilter, { className: courseClassName }];
+      } else {
+        Object.assign(where, enrollmentFilter);
+      }
     }
 
     const users = await prisma.user.findMany({

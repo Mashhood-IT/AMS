@@ -5,8 +5,6 @@ import SectionHeader from '../../components/constantComponents/SectionHeader';
 
 const tabs = [
   { label: 'Mark Attendance', path: '/dashboard/attendance/mark', icon: <ClipboardCheck size={16} /> },
-  { label: 'Logs', path: '/dashboard/attendance/logs', icon: <List size={16} /> },
-  { label: 'Summary', path: '/dashboard/attendance/summary', icon: <BarChart2 size={16} /> },
 ];
 
 const Attendance = () => {

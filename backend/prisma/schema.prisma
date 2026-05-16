@@ -80,6 +80,9 @@ model Course {
   institute   Institute? @relation("InstituteCourses", fields: [instituteId], references: [id])
   className   String?
 
+  days        String[]   @default([])
+  time        String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

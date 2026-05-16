@@ -18,8 +18,12 @@ const AddCourse = ({ courseId, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    className: ''
+    className: '',
+    days: [],
+    time: ''
   });
+
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
@@ -32,7 +36,7 @@ const AddCourse = ({ courseId, onSuccess }) => {
     if (isEditMode) {
       fetchCourseDetails();
     } else {
-      setFormData({ name: '', code: '', className: '' });
+      setFormData({ name: '', code: '', className: '', days: [], time: '' });
       setFetching(false);
     }
   }, [courseId]);
@@ -47,7 +51,9 @@ const AddCourse = ({ courseId, onSuccess }) => {
         setFormData({
           name: response.data.course.name,
           code: response.data.course.code,
-          className: response.data.course.className || ''
+          className: response.data.course.className || '',
+          days: response.data.course.days || [],
+          time: response.data.course.time || ''
         });
       }
     } catch (err) {
@@ -85,6 +91,16 @@ const AddCourse = ({ courseId, onSuccess }) => {
     if (error) setError('');
   };
 
+  const toggleDay = (day) => {
+    setFormData(prev => {
+      const days = prev.days.includes(day)
+        ? prev.days.filter(d => d !== day)
+        : [...prev.days, day];
+      return { ...prev, days };
+    });
+    if (error) setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.code) {
@@ -102,7 +118,7 @@ const AddCourse = ({ courseId, onSuccess }) => {
 
       const method = isEditMode ? 'put' : 'post';
 
-      const payload = { 
+      const payload = {
         ...formData,
         instituteId: JSON.parse(localStorage.getItem('user') || '{}').instituteId
       };
@@ -118,7 +134,8 @@ const AddCourse = ({ courseId, onSuccess }) => {
         }, 1500);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Something went wrong';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -137,7 +154,7 @@ const AddCourse = ({ courseId, onSuccess }) => {
     <div className="">
       <div className="bg-white rounded-lg border-0 p-1">
         <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6 bg-slate-50/30 rounded-lg border border-slate-100">
-          <SectionHeader 
+          <SectionHeader
             title={isEditMode ? 'Update Academic Course' : 'Create New Course'}
             subtitle={isEditMode ? 'Modify course name and code.' : 'Register a new academic curriculum.'}
           />
@@ -208,6 +225,41 @@ const AddCourse = ({ courseId, onSuccess }) => {
                 </div>
               </div>
               <p className="text-[10px] text-slate-400 font-medium ml-1">This course will be visible to all students in the selected class.</p>
+            </div>
+
+            {/* Schedule Days */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">Teaching Days</label>
+              <div className="flex flex-wrap gap-2">
+                {daysOfWeek.map(day => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${formData.days.includes(day)
+                        ? 'bg-brand-active text-white border-brand-active shadow-sm'
+                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                      }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Teaching Time */}
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">Start Time</label>
+              <div className="relative group">
+                <input
+                  type="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  className="custom_input"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium ml-1">Specify the time this class usually starts.</p>
             </div>
           </div>
 

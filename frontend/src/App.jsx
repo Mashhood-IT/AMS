@@ -19,8 +19,6 @@ import StudentsList from './pages/Students/StudentsList';
 
 import Attendance from './pages/Attendance/Attendance';
 import MarkAttendance from './pages/Attendance/MarkAttendance';
-import AttendanceLogs from './pages/Attendance/AttendanceLogs';
-import AttendanceSummary from './pages/Attendance/AttendanceSummary';
 
 // Placeholder components for future development
 const Reports = () => <div className="stat-card"><h2>System Reports</h2><p>Feature coming soon...</p></div>;
@@ -45,8 +43,6 @@ function App() {
             <Route path="attendance" element={<Attendance />}>
               <Route index element={<Navigate to="mark" replace />} />
               <Route path="mark" element={<MarkAttendance />} />
-              <Route path="logs" element={<AttendanceLogs />} />
-              <Route path="summary" element={<AttendanceSummary />} />
             </Route>
 
             <Route path="students" element={<StudentsList />} />

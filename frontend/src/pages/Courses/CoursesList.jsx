@@ -56,6 +56,23 @@ const CoursesList = ({ onEdit }) => {
       render: (val) => new Date(val).toLocaleDateString()
     },
     {
+      key: 'schedule',
+      label: 'Schedule',
+      render: (_, item) => (
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap gap-1">
+            {(item.days || []).map(day => (
+              <span key={day} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold">
+                {day.substring(0, 3)}
+              </span>
+            ))}
+          </div>
+          {item.time && <span className="text-[10px] text-slate-400 font-medium">{item.time}</span>}
+          {!item.time && (!item.days || item.days.length === 0) && <span className="text-[10px] text-slate-300 italic">Not set</span>}
+        </div>
+      )
+    },
+    {
       key: 'actions',
       label: 'Actions',
       render: (_, item) => (

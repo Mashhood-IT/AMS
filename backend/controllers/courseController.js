@@ -24,7 +24,7 @@ export const getAllCourses = async (req, res) => {
 // Create a new course
 export const createCourse = async (req, res) => {
   try {
-    const { name, code, teacherId, className, instituteId } = req.body;
+    const { name, code, teacherId, className, instituteId, days, time } = req.body;
 
     if (!name || !code) {
       return res.status(400).json({ success: false, message: 'Please provide name and code' });
@@ -43,9 +43,11 @@ export const createCourse = async (req, res) => {
       data: {
         name,
         code,
-        ...(teacherId ? { teacher: { connect: { id: parseInt(teacherId) } } } : {}),
+        ...(teacherId && !isNaN(parseInt(teacherId)) ? { teacher: { connect: { id: parseInt(teacherId) } } } : {}),
         className,
         ...(instituteId ? { institute: { connect: { id: instituteId } } } : {}),
+        days: Array.isArray(days) ? days : (days ? days.split(',') : []),
+        time,
       },
       include: {
         teacher: {
@@ -56,6 +58,7 @@ export const createCourse = async (req, res) => {
 
     res.status(201).json({ success: true, message: 'Course created successfully', course });
   } catch (error) {
+    console.error('Error creating course:', error);
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 };
@@ -64,7 +67,7 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, code, teacherId, className } = req.body;
+    const { name, code, teacherId, className, days, time } = req.body;
 
     const courseId = parseInt(id);
 
@@ -92,8 +95,10 @@ export const updateCourse = async (req, res) => {
       data: {
         name: name || existingCourse.name,
         code: code || existingCourse.code,
-        ...(teacherId ? { teacher: { connect: { id: parseInt(teacherId) } } } : {}),
-        className: className !== undefined ? className : existingCourse.className
+        ...(teacherId && !isNaN(parseInt(teacherId)) ? { teacher: { connect: { id: parseInt(teacherId) } } } : {}),
+        className: className !== undefined ? className : existingCourse.className,
+        days: days !== undefined ? (Array.isArray(days) ? days : (days ? days.split(',') : [])) : existingCourse.days,
+        time: time !== undefined ? time : existingCourse.time,
       },
       include: {
         teacher: {

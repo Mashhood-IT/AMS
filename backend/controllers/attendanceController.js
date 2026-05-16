@@ -252,6 +252,7 @@ export const getAttendanceByCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
     const { date, startDate, endDate } = req.query;
+    console.log(`[getAttendanceByCourse] courseId=${courseId} date=${date} startDate=${startDate} endDate=${endDate}`);
 
     const course = await prisma.course.findUnique({ where: { id: parseInt(courseId) } });
     if (!course) {
