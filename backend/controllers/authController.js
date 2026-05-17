@@ -26,6 +26,7 @@ export const signup = async (req, res) => {
         password: hashedPassword,
         name,
         role: role || 'STUDENT',
+        permissions: ['dashboard', 'edit-profile'],
       },
     });
 

@@ -7,7 +7,8 @@ import {
   Settings,
   History,
   BookOpen,
-  Building2
+  Building2,
+  User
 } from 'lucide-react';
 
 export const navItems = [
@@ -48,5 +49,6 @@ export const navItems = [
 
   { title: 'Reports', icon: <FileText size={20} />, path: '/dashboard/reports', permissionKey: 'reports' },
   { title: 'Settings', icon: <Settings size={20} />, path: '/dashboard/settings', permissionKey: 'settings' },
+  { title: 'Edit Profile', icon: <User size={20} />, path: '/dashboard/profile', permissionKey: 'edit-profile' },
 
 ];

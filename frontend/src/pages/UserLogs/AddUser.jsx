@@ -42,12 +42,13 @@ const AddUser = () => {
     role: 'STUDENT',
     status: 'ACTIVE',
     courseIds: [],
-    permissions: [],
+    permissions: ['dashboard', 'edit-profile'],
     className: ''
   });
 
   const availablePermissions = [
     { id: 'dashboard', label: 'Dashboard' },
+    { id: 'edit-profile', label: 'Edit Profile' },
     { id: 'institutes', label: 'Institutes' },
     { id: 'attendance', label: 'Attendance' },
     { id: 'students', label: 'Students' },
@@ -127,7 +128,7 @@ const AddUser = () => {
             role: user.role,
             status: user.status || 'ACTIVE',
             courseIds: user.taughtCourses ? user.taughtCourses.map(c => c.id) : [],
-            permissions: user.permissions || [],
+            permissions: Array.from(new Set([...(user.permissions || []), 'dashboard', 'edit-profile'])),
             className: user.className || ''
           });
         }
@@ -200,9 +201,8 @@ const AddUser = () => {
 
       if (response.data.success) {
         toast.success(isEditMode ? 'User updated successfully' : 'User created successfully');
-        
+
         if (!isEditMode && formData.role === 'PRINCIPAL') {
-          // Redirect to institute creation with the new user's ID
           const userId = response.data.user?.id;
           navigate('/dashboard/institutes/add', { state: { principalId: userId } });
         } else {
@@ -215,16 +215,12 @@ const AddUser = () => {
       setLoading(false);
     }
   };
-  // Get logged-in user role from localStorage
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const currentUserRole = currentUser.role || 'ADMIN';
 
-  // Role options filtered by creator's role
   const roleOptions = (currentUserRole === 'ADMIN'
     ? [
       { label: 'Principal', value: 'PRINCIPAL' },
-      { label: 'Teacher', value: 'TEACHER' },
-      { label: 'Student', value: 'STUDENT' }
     ]
     : [
       { label: 'Teacher', value: 'TEACHER' },
@@ -232,11 +228,10 @@ const AddUser = () => {
     ]
   );
 
-  // Define allowed permissions per role
   const rolePermissionMap = {
     PRINCIPAL: availablePermissions.map(p => p.id),
-    TEACHER: ['students', 'courses', 'reports', 'settings', 'institutes', 'attendance'],
-    STUDENT: ['students', 'reports', 'institutes', 'attendance', 'courses']
+    TEACHER: ['dashboard', 'edit-profile', 'students', 'courses', 'reports', 'settings', 'institutes', 'attendance'],
+    STUDENT: ['dashboard', 'edit-profile', 'students', 'reports', 'institutes', 'attendance', 'courses']
   };
 
   // Get filtered permissions based on the role being assigned to the new/edited user

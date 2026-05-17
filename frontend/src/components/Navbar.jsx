@@ -16,7 +16,7 @@ const Navbar = ({ toggleSidebar }) => {
           <Menu size={24} />
         </button>
         <h2 className="text-lg font-semibold tracking-tight">
-          {user?.role === 'ADMIN' ? 'Admin Panel' : 'Student Portal'}
+          {user?.role ? `${user?.role[0] + user?.role.slice(1).toLowerCase()} Portal` : "Admin Portal"}
         </h2>
       </div>
 

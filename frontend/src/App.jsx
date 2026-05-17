@@ -22,7 +22,6 @@ import MarkAttendance from './pages/Attendance/MarkAttendance';
 import AttendanceList from './pages/Attendance/AttendanceList';
 import { api } from './api';
 
-// Placeholder components for future development
 const Reports = () => <div className="stat-card"><h2>System Reports</h2><p>Feature coming soon...</p></div>;
 const Settings = () => <div className="stat-card"><h2>Settings</h2><p>Feature coming soon...</p></div>;
 

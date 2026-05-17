@@ -47,7 +47,9 @@ export const createUser = async (req, res) => {
         taughtCourses: (role === 'TEACHER' || role === 'PRINCIPAL') && courseIds ? {
           connect: courseIds.map(id => ({ id: parseInt(id) }))
         } : undefined,
-        permissions: permissions || [],
+        permissions: permissions && permissions.length > 0 
+          ? Array.from(new Set([...permissions, 'dashboard', 'edit-profile']))
+          : ['dashboard', 'edit-profile'],
         className: role === 'STUDENT' ? className : null
       },
       include: { taughtCourses: true }
@@ -86,7 +88,9 @@ export const updateUser = async (req, res) => {
       status: status || targetUser.status,
       role: role ? role.toUpperCase() : targetUser.role,
       ...(instituteId ? { institute: { connect: { id: instituteId } } } : {}),
-      permissions: permissions !== undefined ? { set: permissions } : undefined,
+      permissions: permissions !== undefined 
+        ? { set: Array.from(new Set([...permissions, 'dashboard', 'edit-profile'])) } 
+        : undefined,
       className: className !== undefined ? className : targetUser.className,
     };
 
@@ -202,6 +206,67 @@ export const deleteUser = async (req, res) => {
     });
 
     res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+};
+
+// Get role-based real-time dashboard statistics
+export const getDashboardStats = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const role = user.role;
+    const stats = {};
+
+    if (role === 'ADMIN') {
+      stats.totalStudents = await prisma.user.count({ where: { role: 'STUDENT' } });
+      stats.activeCourses = await prisma.course.count();
+      stats.totalTeachers = await prisma.user.count({ where: { role: 'TEACHER' } });
+      stats.totalPrincipals = await prisma.user.count({ where: { role: 'PRINCIPAL' } });
+      stats.totalInstitutes = await prisma.institute.count();
+    } else if (role === 'PRINCIPAL') {
+      const instituteId = user.instituteId || '';
+      stats.totalStudents = await prisma.user.count({
+        where: { role: 'STUDENT', instituteId: instituteId }
+      });
+      stats.activeCourses = await prisma.course.count({
+        where: { instituteId: instituteId }
+      });
+      stats.totalTeachers = await prisma.user.count({
+        where: { role: 'TEACHER', instituteId: instituteId }
+      });
+    } else if (role === 'TEACHER') {
+      stats.activeCourses = await prisma.course.count({
+        where: { teacherId: user.id }
+      });
+      stats.totalStudents = await prisma.user.count({
+        where: {
+          role: 'STUDENT',
+          enrollments: {
+            some: {
+              course: {
+                teacherId: user.id
+              }
+            }
+          }
+        }
+      });
+    } else if (role === 'STUDENT') {
+      const instituteId = user.instituteId || '';
+      const className = user.className || '';
+      stats.activeCourses = await prisma.course.count({
+        where: {
+          instituteId: instituteId,
+          className: className
+        }
+      });
+    }
+
+    res.json({ success: true, role, stats });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }

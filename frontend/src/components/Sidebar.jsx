@@ -52,29 +52,33 @@ const Sidebar = ({ isSidebarOpen }) => {
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out bg-brand-dark text-white flex flex-col
-        ${isSidebarOpen ? 'w-64' : 'w-20 overflow-hidden'}`}
+        ${isSidebarOpen
+          ? 'w-64 translate-x-0'
+          : '-translate-x-full md:translate-x-0 md:w-12 overflow-hidden'
+        }`}
     >
-      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {filteredNavItems.map((item) => {
           const hasSubTabs = item.subTabs && item.subTabs.length > 0;
           const isOpen = openMenus[item.title];
           const isActive = location.pathname === item.path || (hasSubTabs && location.pathname.startsWith(item.path));
 
           return (
-            <div key={item.title} className="space-y-1">
+            <div key={item.title} className="space-y-1 ml-2">
               {hasSubTabs ? (
                 <button
                   onClick={() => toggleMenu(item.title)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group cursor-pointer
+                  className={`w-full ml-1 flex items-center rounded-lg transition-all duration-200 group cursor-pointer
+                    ${isSidebarOpen ? 'gap-4 py-3 justify-between' : 'gap-0 py-3 justify-center'}
                     ${isActive
                       ? 'bg-brand-active text-white shadow-lg shadow-black/20'
                       : 'text-white/70 hover:bg-brand-hover hover:text-white'
                     }`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-center">
                     <div className="shrink-0">{item.icon}</div>
-                    <span className={`font-medium transition-all duration-300 whitespace-nowrap
-                      ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 pointer-events-none'}`}>
+                    <span className={`font-medium transition-all duration-300 whitespace-nowrap ml-4
+                      ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden pointer-events-none ml-0'}`}>
                       {item.title}
                     </span>
                   </div>
@@ -87,21 +91,21 @@ const Sidebar = ({ isSidebarOpen }) => {
               ) : (
                 <Link
                   to={item.path}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group
+                  className={`flex items-center rounded-lg transition-all duration-200 group
+                    ${isSidebarOpen ? 'gap-4 px-4 py-3 justify-start' : 'gap-0 p-3 justify-center'}
                     ${isActive
                       ? 'bg-brand-active text-white shadow-lg shadow-black/20'
                       : 'text-white/70 hover:bg-brand-hover hover:text-white'
                     }`}
                 >
                   <div className="shrink-0">{item.icon}</div>
-                  <span className={`font-medium transition-all duration-300 whitespace-nowrap
-                    ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 pointer-events-none'}`}>
+                  <span className={`font-medium transition-all duration-300 whitespace-nowrap ml-4
+                    ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden pointer-events-none ml-0'}`}>
                     {item.title}
                   </span>
                 </Link>
               )}
 
-              {/* Sub Tabs */}
               {hasSubTabs && isOpen && isSidebarOpen && (
                 <div className="ml-9 space-y-1 mt-1 transition-all duration-300">
                   {item.subTabs.map((sub) => (
@@ -122,33 +126,16 @@ const Sidebar = ({ isSidebarOpen }) => {
             </div>
           );
         })}
-
-        {/* Edit Profile Tab (End of List) */}
-        <Link
-          to="/dashboard/profile"
-          className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group
-            ${location.pathname === '/dashboard/profile'
-              ? 'bg-brand-active text-white shadow-lg shadow-black/20'
-              : 'text-white/70 hover:bg-brand-hover hover:text-white'
-            }`}
-        >
-          <div className="shrink-0"><User size={20} /></div>
-          <span className={`font-medium transition-all duration-300 whitespace-nowrap
-            ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 pointer-events-none'}`}>
-            Edit Profile
-          </span>
-        </Link>
       </nav>
-
-      {/* Footer Section */}
       <div className="p-4 border-t border-white/10">
         <Link
           to="/logout"
-          className="flex items-center gap-4 px-4 py-3 rounded-lg text-white/70 hover:bg-brand-hover hover:text-white transition-all duration-200"
+          className={`flex items-center rounded-lg text-white/70 hover:bg-brand-hover hover:text-white transition-all duration-200 group
+            ${isSidebarOpen ? 'gap-4 px-4 py-3 justify-start' : 'gap-0 p-3 justify-center'}`}
         >
-          <LogOut size={20} />
-          <span className={`font-medium transition-all duration-300 
-            ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+          <div className="shrink-0"><LogOut size={20} /></div>
+          <span className={`font-medium transition-all duration-300 whitespace-nowrap ml-4
+            ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden pointer-events-none ml-0'}`}>
             Logout
           </span>
         </Link>

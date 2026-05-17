@@ -19,15 +19,23 @@ const AttendanceList = () => {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('Select a class and subject to view attendance.');
 
+  // Determine if the logged-in user is a student with a fixed class
+  const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isStudent = loggedInUser?.role === 'STUDENT';
+  const studentClass = isStudent ? (loggedInUser?.className || null) : null;
+
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [coursesResponse, user] = await Promise.all([
-          api.getCourses(),
-          Promise.resolve(JSON.parse(localStorage.getItem('user') || '{}')),
-        ]);
-
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const coursesResponse = await api.getCourses();
         setCourses(coursesResponse.courses || []);
+
+        // For students, their class is locked — no need to fetch all classes
+        if (user?.role === 'STUDENT' && user?.className) {
+          setSelectedClass(user.className);
+          return; // skip loading the class list from the institute
+        }
 
         if (user?.instituteId) {
           const instituteResponse = await api.getInstituteById(user.instituteId);
@@ -60,7 +68,11 @@ const AttendanceList = () => {
       try {
         const result = await api.getAttendance({ courseId: selectedCourse, className: selectedClass });
         if (result.success) {
-          setAttendance(result.attendance || []);
+          let records = result.attendance || [];
+          if (isStudent && loggedInUser?.id) {
+            records = records.filter(r => r.studentId === loggedInUser.id);
+          }
+          setAttendance(records);
           setInfo(result.attendance && result.attendance.length > 0 ? '' : 'No attendance records found for the selected class and subject.');
         } else {
           setError(result.message || 'Failed to load attendance.');
@@ -88,18 +100,26 @@ const AttendanceList = () => {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Class filter: locked badge for students, dropdown for others */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Class</label>
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 focus:border-brand-dark focus:ring-2 focus:ring-brand-dark/15"
-          >
-            <option value="">Select class</option>
-            {classes.map((className) => (
-              <option key={className} value={className}>{className}</option>
-            ))}
-          </select>
+          {isStudent ? (
+            <div className="w-full rounded-lg border border-brand-dark/30 bg-brand-dark/5 px-4 py-2.5 text-sm font-semibold text-brand-dark flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              {studentClass || 'No class assigned'}
+            </div>
+          ) : (
+            <select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 focus:border-brand-dark focus:ring-2 focus:ring-brand-dark/15"
+            >
+              <option value="">Select class</option>
+              {classes.map((className) => (
+                <option key={className} value={className}>{className}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -150,7 +170,6 @@ const AttendanceList = () => {
                 <th className="px-5 py-3.5 text-left">Email</th>
                 <th className="px-5 py-3.5 text-left">Date</th>
                 <th className="px-5 py-3.5 text-left">Status</th>
-                <th className="px-5 py-3.5 text-left">Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -166,7 +185,6 @@ const AttendanceList = () => {
                       {record.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-500">{record.notes || '-'}</td>
                 </tr>
               ))}
             </tbody>

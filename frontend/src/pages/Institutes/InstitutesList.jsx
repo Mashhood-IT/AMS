@@ -131,23 +131,23 @@ const InstitutesList = () => {
     <div className="space-y-6">
       {/* Header Section */}
       <SectionHeader
-        title="Institutes Directory"
+        title="Institutes List"
         subtitle="Manage all registered institutes and their principals."
         button={
-        user.role !== 'STUDENT' ? (
-          <button
-            onClick={() => navigate('/dashboard/institutes/add')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-dark text-white rounded-lg font-bold shadow-lg shadow-brand-dark/20 hover:bg-brand-hover active:scale-[0.98] transition-all"
-          >
-            <Plus size={20} />
-            Add Institute
-          </button>
-        ) : null
-      }
+          user.role !== 'STUDENT' ? (
+            <button
+              onClick={() => navigate('/dashboard/institutes/add')}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-dark text-white rounded-lg font-bold shadow-lg shadow-brand-dark/20 hover:bg-brand-hover active:scale-[0.98] transition-all"
+            >
+              <Plus size={20} />
+              Add Institute
+            </button>
+          ) : null
+        }
       />
 
       {/* Table Section */}
-      <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-4">
             <Loader2 size={48} className="animate-spin text-brand-active/40" />
