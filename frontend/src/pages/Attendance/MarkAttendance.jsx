@@ -134,7 +134,7 @@ const MarkAttendance = () => {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const params = user.role === 'STUDENT' && user.className ? { className: user.className } : {};
-    
+
     api.getCourses(params)
       .then(d => setCourses(d.courses || []))
       .catch(() => { });
@@ -168,28 +168,28 @@ const MarkAttendance = () => {
 
         const mergedRecords = studentList.length > 0
           ? studentList.map((student) => {
-              const existing = attendanceMap.get(student.id);
-              let defaultStatus = 'PENDING';
-              if (existing) {
-                defaultStatus = existing.status;
-              } else if (courseInfo?.time && isGracePeriodOver(courseInfo.time, date)) {
-                defaultStatus = 'ABSENT';
-              }
-              return {
-                studentId: student.id,
-                name: student.name,
-                email: student.email,
-                status: defaultStatus,
-                alreadySaved: !!existing,
-              };
-            })
+            const existing = attendanceMap.get(student.id);
+            let defaultStatus = 'PENDING';
+            if (existing) {
+              defaultStatus = existing.status;
+            } else if (courseInfo?.time && isGracePeriodOver(courseInfo.time, date)) {
+              defaultStatus = 'ABSENT';
+            }
+            return {
+              studentId: student.id,
+              name: student.name,
+              email: student.email,
+              status: defaultStatus,
+              alreadySaved: !!existing,
+            };
+          })
           : attendanceList.map((record) => ({
-              studentId: record.studentId,
-              name: record.student?.name || 'Unknown Student',
-              email: record.student?.email || 'Unknown Email',
-              status: record.status,
-              alreadySaved: true,
-            }));
+            studentId: record.studentId,
+            name: record.student?.name || 'Unknown Student',
+            email: record.student?.email || 'Unknown Email',
+            status: record.status,
+            alreadySaved: true,
+          }));
 
         setCourseDetails(courseInfo);
         setStudents(studentList);
@@ -214,7 +214,7 @@ const MarkAttendance = () => {
     const interval = setInterval(() => {
       if (isGracePeriodOver(courseDetails.time, date)) {
         clearInterval(interval);
-        
+
         // Update local state to ABSENT
         setRecords(prev => prev.map(r => ({ ...r, status: 'ABSENT', alreadySaved: true })));
 
@@ -249,7 +249,7 @@ const MarkAttendance = () => {
 
   const handleSave = async () => {
     if (!selectedCourse || records.length === 0) return;
-    
+
     // Don't allow saving if PENDING
     if (isStudentRole && records[0].status === 'PENDING') {
       showToast('error', 'Please choose Present or Absent before saving.');
@@ -274,7 +274,7 @@ const MarkAttendance = () => {
   };
 
   const presentCount = records.filter(r => r.status === 'PRESENT').length;
-  const absentCount  = records.filter(r => r.status === 'ABSENT').length;
+  const absentCount = records.filter(r => r.status === 'ABSENT').length;
 
   return (
     <div className="space-y-6">
@@ -324,13 +324,13 @@ const MarkAttendance = () => {
           </div>
         )}
 
-        {!isStudentRole && selectedCourse && (
+        {isStudentRole && selectedCourse && (
           <button
             onClick={() => setShowQRModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-lg active:scale-95 transition-all shadow-sm cursor-pointer h-[42px] self-end"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-lg active:scale-95 transition-all shadow-sm cursor-pointer h-[42px] self-end animate-pulse"
           >
             <QrCode size={16} />
-            Generate Check-in QR
+            Get Check-in QR
           </button>
         )}
       </div>
@@ -341,8 +341,8 @@ const MarkAttendance = () => {
           ${records[0]?.status === 'PRESENT'
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
             : records[0]?.status === 'ABSENT'
-            ? 'bg-red-50 border-red-200 text-red-800'
-            : 'bg-amber-50 border-amber-200 text-amber-800'
+              ? 'bg-red-50 border-red-200 text-red-800'
+              : 'bg-amber-50 border-amber-200 text-amber-800'
           }`}
         >
           <Timer size={18} className={records[0]?.status === 'PENDING' ? "animate-pulse text-amber-500" : ""} />
@@ -432,7 +432,7 @@ const MarkAttendance = () => {
                         {STATUS_OPTIONS.map(s => {
                           const isSelected = r.status === s;
                           const isDisabled = isStudentRole && (r.alreadySaved || (courseDetails?.time && isGracePeriodOver(courseDetails.time, date)));
-                          
+
                           return (
                             <button
                               key={s}
@@ -475,12 +475,16 @@ const MarkAttendance = () => {
       {showQRModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl border border-slate-100 max-w-md w-full shadow-2xl p-6 relative overflow-hidden flex flex-col items-center">
-            
+
             {/* Elegant Header */}
             <div className="w-full flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Dynamic Attendance QR</h3>
-                <p className="text-xs text-slate-400 font-medium">Scannable check-in for students</p>
+                <h3 className="text-lg font-bold text-slate-800">
+                  {isStudentRole ? 'My Check-in QR Code' : 'Dynamic Attendance QR'}
+                </h3>
+                <p className="text-xs text-slate-400 font-medium">
+                  {isStudentRole ? 'Scan with your phone to mark attendance' : 'Scannable check-in for students'}
+                </p>
               </div>
               <button
                 onClick={() => setShowQRModal(false)}
@@ -499,7 +503,9 @@ const MarkAttendance = () => {
                 Scan QR to Automatically Mark Present
               </h4>
               <p className="text-xs text-slate-500 mt-1">
-                Dynamic code expires & rotates automatically.
+                {isStudentRole
+                  ? "Open your phone's camera, scan the QR code, and log in to verify your identity."
+                  : 'Dynamic code expires & rotates automatically.'}
               </p>
             </div>
 
@@ -513,7 +519,7 @@ const MarkAttendance = () => {
               ) : (
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
-                    `${window.location.origin}/check-in?courseId=${selectedCourse}&token=${qrToken}`
+                    `${window.location.origin}/#/check-in?courseId=${selectedCourse}&token=${qrToken}`
                   )}`}
                   alt="Attendance Scan QR Code"
                   className="w-[240px] h-[240px] rounded-lg select-none"
@@ -527,26 +533,52 @@ const MarkAttendance = () => {
               </div>
             </div>
 
-            {/* Real-time stats count */}
-            <div className="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 text-center">
-              <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3">
-                <p className="text-[20px] font-extrabold text-emerald-600 leading-none">
-                  {records.filter(r => r.status === 'PRESENT').length}
-                </p>
-                <p className="text-xs font-semibold text-emerald-800 mt-1">Checked In</p>
+            {/* Status display / real-time counts */}
+            {isStudentRole ? (
+              <div className="w-full border-t border-slate-100 pt-5">
+                {records[0]?.status === 'PRESENT' ? (
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center flex flex-col items-center animate-fade-in-up">
+                    <div className="inline-flex items-center justify-center p-1.5 bg-emerald-500 rounded-full text-white mb-2 shadow-sm shadow-emerald-500/25">
+                      <CheckCircle size={16} />
+                    </div>
+                    <p className="text-sm font-extrabold text-emerald-800 leading-tight">PRESENT</p>
+                    <p className="text-xs text-emerald-600 mt-1 font-medium">Your attendance has been successfully recorded!</p>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 text-center flex flex-col items-center">
+                    <div className="inline-flex items-center justify-center p-1.5 bg-amber-500 rounded-full text-white mb-2 animate-bounce">
+                      <RefreshCcw size={16} className="animate-spin text-amber-500 bg-white rounded-full p-0.5" style={{ animationDuration: '3s' }} />
+                    </div>
+                    <p className="text-sm font-extrabold text-amber-800 leading-tight">PENDING SCAN</p>
+                    <p className="text-xs text-slate-500 mt-1 font-medium">Waiting for you to scan this code on your mobile phone...</p>
+                  </div>
+                )}
               </div>
-              <div className="bg-slate-50/60 border border-slate-100 rounded-xl p-3">
-                <p className="text-[20px] font-extrabold text-slate-500 leading-none">
-                  {records.filter(r => r.status === 'PENDING').length}
-                </p>
-                <p className="text-xs font-semibold text-slate-500 mt-1">Pending Scan</p>
+            ) : (
+              <div className="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 text-center">
+                <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3">
+                  <p className="text-[20px] font-extrabold text-emerald-600 leading-none">
+                    {records.filter(r => r.status === 'PRESENT').length}
+                  </p>
+                  <p className="text-xs font-semibold text-emerald-800 mt-1">Checked In</p>
+                </div>
+                <div className="bg-slate-50/60 border border-slate-100 rounded-xl p-3">
+                  <p className="text-[20px] font-extrabold text-slate-500 leading-none">
+                    {records.filter(r => r.status === 'PENDING').length}
+                  </p>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">Pending Scan</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Live activity ticker */}
             <div className="w-full mt-4 flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-dark animate-pulse"></span>
-              <span>Waiting for students to check in...</span>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full animate-pulse ${(isStudentRole && records[0]?.status === 'PRESENT') ? 'bg-emerald-500' : 'bg-brand-dark'}`}></span>
+              <span>
+                {isStudentRole
+                  ? (records[0]?.status === 'PRESENT' ? 'Check-in completed successfully!' : 'Waiting for scan on your mobile device...')
+                  : 'Waiting for students to check in...'}
+              </span>
             </div>
 
           </div>
