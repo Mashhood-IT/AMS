@@ -576,7 +576,7 @@ export const markAttendanceQR = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Course not found.' });
     }
 
-    // Verify that the student is enrolled in the course
+    // Verify that the student is enrolled in the course OR shares the same className
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         studentId_courseId: {
@@ -586,7 +586,9 @@ export const markAttendanceQR = async (req, res) => {
       },
     });
 
-    if (!enrollment) {
+    const isSameClass = !!(student.className && course.className && student.className === course.className);
+
+    if (!enrollment && !isSameClass) {
       return res.status(403).json({
         success: false,
         message: 'You are not enrolled in this course.',
