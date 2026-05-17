@@ -20,6 +20,7 @@ import StudentsList from './pages/Students/StudentsList';
 import Attendance from './pages/Attendance/Attendance';
 import MarkAttendance from './pages/Attendance/MarkAttendance';
 import AttendanceList from './pages/Attendance/AttendanceList';
+import CheckIn from './pages/Attendance/CheckIn';
 import { api } from './api';
 
 const Reports = () => <div className="stat-card"><h2>System Reports</h2><p>Feature coming soon...</p></div>;
@@ -55,6 +56,8 @@ function App() {
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password/:token" element={<ResetPassword />} />
           </Route>
+
+          <Route path="/check-in" element={<CheckIn />} />
 
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
-import { CheckCircle, XCircle, Save, RefreshCcw, ChevronDown, Timer } from 'lucide-react';
+import { CheckCircle, XCircle, Save, RefreshCcw, ChevronDown, Timer, QrCode, X } from 'lucide-react';
 import SectionHeader from '../../components/constantComponents/SectionHeader';
 
 const STATUS_OPTIONS = ['PRESENT', 'ABSENT'];
@@ -57,8 +57,79 @@ const MarkAttendance = () => {
   const [toast, setToast] = useState(null);
   const [courseDetails, setCourseDetails] = useState(null);
 
+  // QR Check-in states
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrToken, setQrToken] = useState('');
+  const [qrLoading, setQrLoading] = useState(false);
+
   const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isStudentRole = loggedInUser?.role === 'STUDENT';
+
+  // Handle QR token fetching and real-time student updates
+  useEffect(() => {
+    if (!showQRModal || !selectedCourse) return;
+
+    const fetchToken = async () => {
+      try {
+        setQrLoading(true);
+        const res = await api.getQRToken(selectedCourse);
+        if (res.success) {
+          setQrToken(res.token);
+        }
+      } catch (err) {
+        console.error("Failed to load QR token:", err);
+      } finally {
+        setQrLoading(false);
+      }
+    };
+
+    fetchToken();
+
+    // Refetches token every 60 seconds (safe dynamic window)
+    const tokenInterval = setInterval(fetchToken, 60000);
+
+    // Live refresh student attendance records every 4 seconds
+    const reloadStudents = async () => {
+      try {
+        const [usersResponse, attendanceResponse] = await Promise.all([
+          api.getUsers({ role: 'STUDENT', courseId: selectedCourse }),
+          api.getAttendanceByCourse(selectedCourse, { date }),
+        ]);
+        const studentList = usersResponse.users || [];
+        const attendanceList = attendanceResponse.attendance || [];
+        const courseInfo = courses.find(c => String(c.id) === String(selectedCourse));
+        const attendanceMap = new Map(attendanceList.map((record) => [record.studentId, record]));
+
+        const mergedRecords = studentList.map((student) => {
+          const existing = attendanceMap.get(student.id);
+          let defaultStatus = 'PENDING';
+          if (existing) {
+            defaultStatus = existing.status;
+          } else if (courseInfo?.time && isGracePeriodOver(courseInfo.time, date)) {
+            defaultStatus = 'ABSENT';
+          }
+          return {
+            studentId: student.id,
+            name: student.name,
+            email: student.email,
+            status: defaultStatus,
+            alreadySaved: !!existing,
+          };
+        });
+        setRecords(mergedRecords);
+      } catch (err) {
+        console.error("Live reload failed:", err);
+      }
+    };
+
+    const reloadInterval = setInterval(reloadStudents, 4000);
+
+    return () => {
+      clearInterval(tokenInterval);
+      clearInterval(reloadInterval);
+    };
+  }, [showQRModal, selectedCourse, date, courses]);
+
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -252,6 +323,16 @@ const MarkAttendance = () => {
             />
           </div>
         )}
+
+        {!isStudentRole && selectedCourse && (
+          <button
+            onClick={() => setShowQRModal(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-lg active:scale-95 transition-all shadow-sm cursor-pointer h-[42px] self-end"
+          >
+            <QrCode size={16} />
+            Generate Check-in QR
+          </button>
+        )}
       </div>
 
       {/* Student Guidance Alert */}
@@ -389,6 +470,87 @@ const MarkAttendance = () => {
             </button>
           </div>
         </>
+      )}
+      {/* Dynamic QR Code Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-100 max-w-md w-full shadow-2xl p-6 relative overflow-hidden flex flex-col items-center">
+            
+            {/* Elegant Header */}
+            <div className="w-full flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Dynamic Attendance QR</h3>
+                <p className="text-xs text-slate-400 font-medium">Scannable check-in for students</p>
+              </div>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content / Info Card */}
+            <div className="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-4 mb-5 text-center">
+              <span className="text-xs font-semibold text-brand-dark bg-blue-50 px-2.5 py-1 rounded-full">
+                {courses.find(c => String(c.id) === String(selectedCourse))?.name || 'Course'}
+              </span>
+              <h4 className="text-sm font-bold text-slate-700 mt-2">
+                Scan QR to Automatically Mark Present
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Dynamic code expires & rotates automatically.
+              </p>
+            </div>
+
+            {/* QR Display */}
+            <div className="relative p-3 bg-gradient-to-tr from-slate-100 to-white border border-slate-200/80 rounded-2xl shadow-inner mb-5 flex items-center justify-center min-h-[260px] min-w-[260px]">
+              {qrLoading || !qrToken ? (
+                <div className="flex flex-col items-center gap-2 text-slate-400">
+                  <RefreshCcw size={24} className="animate-spin text-brand-dark" />
+                  <span className="text-xs">Generating dynamic token...</span>
+                </div>
+              ) : (
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                    `${window.location.origin}/check-in?courseId=${selectedCourse}&token=${qrToken}`
+                  )}`}
+                  alt="Attendance Scan QR Code"
+                  className="w-[240px] h-[240px] rounded-lg select-none"
+                />
+              )}
+
+              {/* Pulsing indicator */}
+              <div className="absolute top-3 right-3 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </div>
+            </div>
+
+            {/* Real-time stats count */}
+            <div className="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 text-center">
+              <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3">
+                <p className="text-[20px] font-extrabold text-emerald-600 leading-none">
+                  {records.filter(r => r.status === 'PRESENT').length}
+                </p>
+                <p className="text-xs font-semibold text-emerald-800 mt-1">Checked In</p>
+              </div>
+              <div className="bg-slate-50/60 border border-slate-100 rounded-xl p-3">
+                <p className="text-[20px] font-extrabold text-slate-500 leading-none">
+                  {records.filter(r => r.status === 'PENDING').length}
+                </p>
+                <p className="text-xs font-semibold text-slate-500 mt-1">Pending Scan</p>
+              </div>
+            </div>
+
+            {/* Live activity ticker */}
+            <div className="w-full mt-4 flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-dark animate-pulse"></span>
+              <span>Waiting for students to check in...</span>
+            </div>
+
+          </div>
+        </div>
       )}
     </div>
   );

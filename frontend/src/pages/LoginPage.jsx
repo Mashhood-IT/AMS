@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const qrMessage = location.state?.message;
+
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -17,7 +20,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    loading || setLoading(true);
     setError('');
 
     try {
@@ -27,8 +30,15 @@ const LoginPage = () => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Redirect to dashboard
-        navigate('/dashboard');
+        // Intercept for pending QR code attendance
+        const pendingQR = localStorage.getItem('pendingQRCheckIn');
+        if (pendingQR && data.user?.role === 'STUDENT') {
+          const { courseId, token } = JSON.parse(pendingQR);
+          navigate(`/check-in?courseId=${courseId}&token=${token}`);
+        } else {
+          // Redirect to dashboard
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -39,6 +49,16 @@ const LoginPage = () => {
 
   return (
     <div className="space-y-4">
+      {qrMessage && (
+        <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 text-xs py-3 px-4 rounded-xl flex items-center gap-2.5 font-semibold animate-pulse shadow-sm">
+          <span className="flex h-2 w-2 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+          </span>
+          {qrMessage}
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs py-2 px-3 rounded-lg">
           {error}

@@ -166,6 +166,24 @@ export const api = {
       throw error.response?.data || { message: 'Network error or server unavailable' };
     }
   },
+
+  getQRToken: async (courseId) => {
+    try {
+      const response = await apiInstance.get(`/attendance/qr-token/${courseId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Network error or server unavailable' };
+    }
+  },
+
+  markAttendanceQR: async (data) => {
+    try {
+      const response = await apiInstance.post('/attendance/mark-qr', data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Network error or server unavailable' };
+    }
+  },
 };
 
 export default api;

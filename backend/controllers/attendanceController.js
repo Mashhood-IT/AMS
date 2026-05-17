@@ -1,4 +1,5 @@
 import { prisma } from '../db.js';
+import crypto from 'crypto';
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
@@ -482,3 +483,150 @@ export const bulkMarkAttendance = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
   }
 };
+
+// ─── QR Attendance Helpers & Endpoints ──────────────────────────────────────────
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+
+export const generateQRToken = (courseId, dateStr) => {
+  const timeBucket = Math.floor(Date.now() / (1000 * 60 * 15)); // Valid for 15-minute intervals
+  return crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${courseId}-${dateStr}-${timeBucket}`)
+    .digest('hex');
+};
+
+export const verifyQRToken = (courseId, dateStr, token) => {
+  const timeBucketCurrent = Math.floor(Date.now() / (1000 * 60 * 15));
+  const timeBucketPrev = timeBucketCurrent - 1;
+
+  const hashCurrent = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${courseId}-${dateStr}-${timeBucketCurrent}`)
+    .digest('hex');
+  const hashPrev = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${courseId}-${dateStr}-${timeBucketPrev}`)
+    .digest('hex');
+
+  return token === hashCurrent || token === hashPrev;
+};
+
+/**
+ * GET /api/attendance/qr-token/:courseId
+ * Generates the secure, time-sensitive QR token for the teacher dashboard.
+ */
+export const getQRToken = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const token = generateQRToken(courseId, dateStr);
+
+    return res.status(200).json({
+      success: true,
+      token,
+      courseId: parseInt(courseId),
+      date: dateStr
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to generate token.', error: error.message });
+  }
+};
+
+/**
+ * POST /api/attendance/mark-qr
+ * Body: { courseId, token }
+ * Marks student attendance using the scanned QR token.
+ */
+export const markAttendanceQR = async (req, res) => {
+  try {
+    const { courseId, token } = req.body;
+    const studentId = req.userId;
+
+    if (!courseId || !token) {
+      return res.status(400).json({
+        success: false,
+        message: 'courseId and token are required.',
+      });
+    }
+
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    // Verify dynamic token
+    const isTokenValid = verifyQRToken(courseId, dateStr, token);
+    if (!isTokenValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'The scanned QR code is invalid or has expired. Please ask the instructor for a fresh QR code.',
+      });
+    }
+
+    // Verify student exists and is active
+    const student = await prisma.user.findUnique({ where: { id: parseInt(studentId) } });
+    if (!student || student.status !== 'ACTIVE') {
+      return res.status(404).json({
+        success: false,
+        message: 'Student account is not active or could not be found.',
+      });
+    }
+
+    // Verify course exists
+    const course = await prisma.course.findUnique({ where: { id: parseInt(courseId) } });
+    if (!course) {
+      return res.status(404).json({ success: false, message: 'Course not found.' });
+    }
+
+    // Verify that the student is enrolled in the course
+    const enrollment = await prisma.enrollment.findUnique({
+      where: {
+        studentId_courseId: {
+          studentId: parseInt(studentId),
+          courseId: parseInt(courseId),
+        },
+      },
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not enrolled in this course.',
+      });
+    }
+
+    const dateKey = toDateKey(dateStr);
+
+    const attendance = await prisma.attendance.upsert({
+      where: {
+        studentId_courseId_date: {
+          studentId: parseInt(studentId),
+          courseId: parseInt(courseId),
+          date: dateKey,
+        },
+      },
+      update: {
+        status: 'PRESENT',
+        notes: 'Marked automatically via QR Code scan',
+      },
+      create: {
+        studentId: parseInt(studentId),
+        courseId: parseInt(courseId),
+        date: dateKey,
+        status: 'PRESENT',
+        notes: 'Marked automatically via QR Code scan',
+      },
+      include: {
+        student: { select: { id: true, name: true, email: true } },
+        course:  { select: { id: true, name: true, code: true } },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Attendance for ${course.name} marked successfully!`,
+      attendance,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to record QR attendance.', error: error.message });
+  }
+};
+
