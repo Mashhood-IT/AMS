@@ -1,6 +1,27 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+let BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Dynamically resolve backend IP to allow mobile devices to connect when running locally
+if (typeof window !== 'undefined') {
+  const currentHostname = window.location.hostname;
+  const isLocal = currentHostname === 'localhost' || currentHostname === '127.0.0.1';
+  const devIP = import.meta.env.VITE_DEV_IP;
+
+  try {
+    const url = new URL(BASE_URL);
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+      if (!isLocal) {
+        url.hostname = currentHostname;
+      } else if (devIP && devIP !== 'localhost') {
+        url.hostname = devIP;
+      }
+      BASE_URL = url.toString();
+    }
+  } catch (e) {
+    console.error('Failed to parse BASE_URL', e);
+  }
+}
 
 const apiInstance = axios.create({
   baseURL: BASE_URL,

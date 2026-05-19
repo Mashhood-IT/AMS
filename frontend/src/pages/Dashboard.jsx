@@ -39,7 +39,7 @@ const Dashboard = () => {
       case 'PRINCIPAL':
         return `Welcome back, Principal ${name}. Here's a snapshot of your institute.`;
       case 'TEACHER':
-        return `Welcome back, Dr./Mr./Ms. ${name}. Here's your academic status today.`;
+        return `Welcome back, ${name}. Here's your academic status today.`;
       case 'STUDENT':
         return `Welcome back, ${name}. Check your active courses and classes below.`;
       default:

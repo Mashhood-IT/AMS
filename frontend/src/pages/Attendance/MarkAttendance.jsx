@@ -544,7 +544,12 @@ const MarkAttendance = () => {
               ) : (
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                    `${window.location.origin}/#/check-in?courseId=${selectedCourse}&token=${qrToken}`
+                    `${((origin, hostname, devIP) => {
+                      if ((hostname === 'localhost' || hostname === '127.0.0.1') && devIP && devIP !== 'localhost') {
+                        return origin.replace(hostname, devIP);
+                      }
+                      return origin;
+                    })(window.location.origin, window.location.hostname, import.meta.env.VITE_DEV_IP)}/#/check-in?courseId=${selectedCourse}&token=${qrToken}`
                   )}`}
                   alt="Attendance Scan QR Code"
                   className="w-[180px] h-[180px] rounded-lg select-none"

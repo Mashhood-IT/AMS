@@ -4,7 +4,6 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-  User
 } from 'lucide-react';
 import { navItems } from '../data/Data';
 
@@ -76,14 +75,14 @@ const Sidebar = ({ isSidebarOpen }) => {
                     }`}
                 >
                   <div className="flex items-center justify-center">
-                    <div className="shrink-0">{item.icon}</div>
+                    <div className="shrink-0 ml-2">{item.icon}</div>
                     <span className={`font-medium transition-all duration-300 whitespace-nowrap ml-4
                       ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden pointer-events-none ml-0'}`}>
                       {item.title}
                     </span>
                   </div>
                   {isSidebarOpen && (
-                    <div className="shrink-0">
+                    <div className="shrink-0 mr-2">
                       {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </div>
                   )}
@@ -98,7 +97,7 @@ const Sidebar = ({ isSidebarOpen }) => {
                       : 'text-white/70 hover:bg-brand-hover hover:text-white'
                     }`}
                 >
-                  <div className="shrink-0">{item.icon}</div>
+                  <div className="shrink-0 ml-2">{item.icon}</div>
                   <span className={`font-medium transition-all duration-300 whitespace-nowrap ml-4
                     ${isSidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden pointer-events-none ml-0'}`}>
                     {item.title}
