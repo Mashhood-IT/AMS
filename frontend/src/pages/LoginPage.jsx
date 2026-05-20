@@ -33,8 +33,9 @@ const LoginPage = () => {
         // Intercept for pending QR code attendance
         const pendingQR = localStorage.getItem('pendingQRCheckIn');
         if (pendingQR && data.user?.role === 'STUDENT') {
-          const { courseId, token } = JSON.parse(pendingQR);
-          navigate(`/check-in?courseId=${courseId}&token=${token}`);
+          const { courseId, token, desktopUserId } = JSON.parse(pendingQR);
+          const desktopUserParam = desktopUserId ? `&desktopUserId=${desktopUserId}` : '';
+          navigate(`/check-in?courseId=${courseId}&token=${token}${desktopUserParam}`);
         } else {
           // Redirect to dashboard
           navigate('/dashboard');

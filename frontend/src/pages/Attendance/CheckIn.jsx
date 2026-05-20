@@ -12,6 +12,7 @@ const CheckIn = () => {
 
   const courseId = searchParams.get('courseId');
   const token = searchParams.get('token');
+  const desktopUserId = searchParams.get('desktopUserId');
 
   useEffect(() => {
     if (!courseId || !token) {
@@ -25,7 +26,7 @@ const CheckIn = () => {
 
     if (!authToken || !loggedInUser?.id) {
       // Not authenticated - persist parameters and redirect to login
-      localStorage.setItem('pendingQRCheckIn', JSON.stringify({ courseId, token }));
+      localStorage.setItem('pendingQRCheckIn', JSON.stringify({ courseId, token, desktopUserId }));
       
       // We can redirect the user with state so the Login page knows to show an elegant toast
       navigate('/login', { 
@@ -51,6 +52,7 @@ const CheckIn = () => {
         const res = await api.markAttendanceQR({
           courseId: parseInt(courseId),
           token,
+          desktopUserId: desktopUserId ? parseInt(desktopUserId) : undefined,
         });
 
         if (res.success) {

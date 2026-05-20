@@ -542,7 +542,7 @@ const MarkAttendance = () => {
                           return origin.replace(hostname, devIP);
                         }
                         return origin;
-                      })(window.location.origin, window.location.hostname, import.meta.env.VITE_DEV_IP)}/#/check-in?courseId=${selectedCourse}&token=${qrToken}`
+                      })(window.location.origin, window.location.hostname, import.meta.env.VITE_DEV_IP)}/#/check-in?courseId=${selectedCourse}&token=${qrToken}${isStudentRole ? `&desktopUserId=${loggedInUser.id}` : ''}`
                     )}`}
                     alt="Attendance Scan QR Code"
                     className="w-[180px] h-[180px] rounded-lg select-none"

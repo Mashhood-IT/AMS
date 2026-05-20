@@ -479,25 +479,35 @@ export const bulkMarkAttendance = async (req, res) => {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
-export const generateQRToken = (courseId, dateStr) => {
+export const generateQRToken = (courseId, dateStr, studentId = null) => {
   const timeBucket = Math.floor(Date.now() / (1000 * 60 * 15)); // Valid for 15-minute intervals
+  const baseString = studentId 
+    ? `${courseId}-${dateStr}-${studentId}-${timeBucket}` 
+    : `${courseId}-${dateStr}-${timeBucket}`;
   return crypto
     .createHmac('sha256', JWT_SECRET)
-    .update(`${courseId}-${dateStr}-${timeBucket}`)
+    .update(baseString)
     .digest('hex');
 };
 
-export const verifyQRToken = (courseId, dateStr, token) => {
+export const verifyQRToken = (courseId, dateStr, token, studentId = null) => {
   const timeBucketCurrent = Math.floor(Date.now() / (1000 * 60 * 15));
   const timeBucketPrev = timeBucketCurrent - 1;
 
+  const baseStringCurrent = studentId 
+    ? `${courseId}-${dateStr}-${studentId}-${timeBucketCurrent}` 
+    : `${courseId}-${dateStr}-${timeBucketCurrent}`;
+  const baseStringPrev = studentId 
+    ? `${courseId}-${dateStr}-${studentId}-${timeBucketPrev}` 
+    : `${courseId}-${dateStr}-${timeBucketPrev}`;
+
   const hashCurrent = crypto
     .createHmac('sha256', JWT_SECRET)
-    .update(`${courseId}-${dateStr}-${timeBucketCurrent}`)
+    .update(baseStringCurrent)
     .digest('hex');
   const hashPrev = crypto
     .createHmac('sha256', JWT_SECRET)
-    .update(`${courseId}-${dateStr}-${timeBucketPrev}`)
+    .update(baseStringPrev)
     .digest('hex');
 
   return token === hashCurrent || token === hashPrev;
@@ -510,9 +520,18 @@ export const verifyQRToken = (courseId, dateStr, token) => {
 export const getQRToken = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const dateStr = new Date().toISOString().split('T')[0];
-    const token = generateQRToken(courseId, dateStr);
+    const requestingUserId = req.userId;
+    console.log(`[QR ATTENDANCE VERIFICATION] Generating QR Token request: courseId=${courseId}, req.userId=${requestingUserId}`);
 
+    // Check if requesting user is a STUDENT to bind their ID
+    const user = await prisma.user.findUnique({ where: { id: parseInt(requestingUserId) } });
+    const isStudent = user?.role === 'STUDENT';
+    const studentId = isStudent ? parseInt(requestingUserId) : null;
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const token = generateQRToken(courseId, dateStr, studentId);
+
+    console.log(`[QR ATTENDANCE VERIFICATION] Generated token bound to studentId=${studentId}`);
     return res.status(200).json({
       success: true,
       token,
@@ -520,21 +539,25 @@ export const getQRToken = async (req, res) => {
       date: dateStr
     });
   } catch (error) {
+    console.error(`[QR ATTENDANCE VERIFICATION] Failed to generate token:`, error);
     return res.status(500).json({ success: false, message: 'Failed to generate token.', error: error.message });
   }
 };
 
 /**
  * POST /api/attendance/mark-qr
- * Body: { courseId, token }
+ * Body: { courseId, token, desktopUserId }
  * Marks student attendance using the scanned QR token.
  */
 export const markAttendanceQR = async (req, res) => {
   try {
-    const { courseId, token } = req.body;
-    const studentId = req.userId;
+    const { courseId, token, desktopUserId } = req.body;
+    const studentId = req.userId; // The student logged in on the mobile phone scanning the QR code
+
+    console.log(`[QR ATTENDANCE VERIFICATION] Attempting QR Check-in: courseId=${courseId}, mobileStudentId=${studentId}, desktopUserId=${desktopUserId}`);
 
     if (!courseId || !token) {
+      console.warn(`[QR ATTENDANCE VERIFICATION] Missing parameters: courseId=${courseId}, token=${token}`);
       return res.status(400).json({
         success: false,
         message: 'courseId and token are required.',
@@ -543,18 +566,31 @@ export const markAttendanceQR = async (req, res) => {
 
     const dateStr = new Date().toISOString().split('T')[0];
 
-    // Verify dynamic token
-    const isTokenValid = verifyQRToken(courseId, dateStr, token);
+    // If desktopUserId is provided, it means this was scanned from a student's desktop session.
+    // Verify the dynamic token hash matching the student's ID.
+    const expectedStudentId = desktopUserId ? parseInt(desktopUserId) : null;
+    const isTokenValid = verifyQRToken(courseId, dateStr, token, expectedStudentId);
     if (!isTokenValid) {
+      console.warn(`[QR ATTENDANCE VERIFICATION] Invalid or expired token: ${token} for expectedStudentId=${expectedStudentId}`);
       return res.status(400).json({
         success: false,
-        message: 'The scanned QR code is invalid or has expired. Please ask the instructor for a fresh QR code.',
+        message: 'The scanned QR code is invalid or has expired. Please ask the instructor or refresh your desktop page.',
+      });
+    }
+
+    // Crucial validation: Ensure the mobile user is indeed the same user as the logged-in desktop session user
+    if (desktopUserId && parseInt(desktopUserId) !== parseInt(studentId)) {
+      console.warn(`[QR ATTENDANCE VERIFICATION] MISMATCH DETECTED: Mobile user (ID=${studentId}) does not match desktop user (ID=${desktopUserId})`);
+      return res.status(403).json({
+        success: false,
+        message: 'Mismatch Error: The logged-in student on this phone does not match the active desktop session!',
       });
     }
 
     // Verify student exists
     const student = await prisma.user.findUnique({ where: { id: parseInt(studentId) } });
     if (!student) {
+      console.warn(`[QR ATTENDANCE VERIFICATION] Student account not found: ID=${studentId}`);
       return res.status(404).json({
         success: false,
         message: 'Student account could not be found.',
@@ -564,6 +600,7 @@ export const markAttendanceQR = async (req, res) => {
     // Verify course exists
     const course = await prisma.course.findUnique({ where: { id: parseInt(courseId) } });
     if (!course) {
+      console.warn(`[QR ATTENDANCE VERIFICATION] Course not found: ID=${courseId}`);
       return res.status(404).json({ success: false, message: 'Course not found.' });
     }
 
@@ -580,6 +617,7 @@ export const markAttendanceQR = async (req, res) => {
     const isSameClass = !!(student.className && course.className && student.className === course.className);
 
     if (!enrollment && !isSameClass) {
+      console.warn(`[QR ATTENDANCE VERIFICATION] Student ID=${studentId} is not enrolled or shares the same class as course ID=${courseId}`);
       return res.status(403).json({
         success: false,
         message: 'You are not enrolled in this course.',
@@ -598,7 +636,7 @@ export const markAttendanceQR = async (req, res) => {
       },
       update: {
         status: 'PRESENT',
-        notes: 'Marked automatically via QR Code scan',
+        notes: 'Marked automatically via match-validated QR Code scan',
         location: req.body.location ?? undefined,
         markedAt: new Date(),
       },
@@ -609,7 +647,7 @@ export const markAttendanceQR = async (req, res) => {
         markedAt: new Date(),
         status: 'PRESENT',
         location: req.body.location ?? null,
-        notes: 'Marked automatically via QR Code scan',
+        notes: 'Marked automatically via match-validated QR Code scan',
       },
       include: {
         student: { select: { id: true, name: true, email: true } },
@@ -617,12 +655,14 @@ export const markAttendanceQR = async (req, res) => {
       },
     });
 
+    console.log(`[QR ATTENDANCE VERIFICATION] SUCCESS: Marked PRESENT for ${student.email} in ${course.name}`);
     return res.status(200).json({
       success: true,
       message: `Attendance for ${course.name} marked successfully!`,
       attendance,
     });
   } catch (error) {
+    console.error(`[QR ATTENDANCE VERIFICATION] Failed to record QR attendance:`, error);
     return res.status(500).json({ success: false, message: 'Failed to record QR attendance.', error: error.message });
   }
 };
