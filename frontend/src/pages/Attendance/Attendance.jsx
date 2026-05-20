@@ -36,7 +36,6 @@ const Attendance = () => {
         ))}
       </div>
 
-      {/* Tab Content */}
       <Outlet />
     </div>
   );
